@@ -8,7 +8,7 @@ import threading
 import time
 import traceback
 
-from colorama import colorama_text, Fore
+from colorama import colorama_text, Fore, Style
 from tabulate import tabulate
 
 from . import connection
@@ -131,7 +131,7 @@ class RATServerCmd(cmd.Cmd):
     def error(self, msg):
         #TODO: use self.stderr here.
         print('*** {}'.format(
-            Fore.RED + msg.capitalize(),
+            Style.BRIGHT + Fore.RED + msg.capitalize() + Style.RESET_ALL,
         ))
 
     def do_clear(self, line):
