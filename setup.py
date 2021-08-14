@@ -10,5 +10,10 @@ setup(
         #[console_scripts]
         #socketrat = socketrat:main
         #""",
+        install_requires=[
+            'colorama>=0.4.4',
+            'tabulate>=0.8.9',
+            'tqdm>=4.62.0',
+        ],
 )
 
