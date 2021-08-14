@@ -8,7 +8,6 @@ import os
 import time
 
 from colorama import colorama_text, Fore, Style
-import humanize
 from tabulate import tabulate
 from tqdm import tqdm
 
@@ -230,15 +229,12 @@ class PayloadSessionCmd(SessionCmd):
             return
 
         file_size = os.path.getsize(local_path)
-        human_file_size = humanize.naturalsize(file_size)
-
         with open(local_path, 'rb') as lf, self.rpc.open_file(remote_output, 'wb') as rf:
             chunk_size = 1024
             l_bar = '{desc}: {percentage:.0f}%|'
             bar_fmt = l_bar + '{bar:20}{r_bar}'
             print('Uploading file: {} ...'.format(local_path))
             with tqdm(
-                    #desc='Uploading file: {}'.format(local_path),
                     desc='  {}'.format(local_path),
                     bar_format=bar_fmt,
                     ascii=False,
@@ -268,8 +264,6 @@ class PayloadSessionCmd(SessionCmd):
             return
 
         file_size = self.rpc.get_file_size(remote_path)
-        human_file_size = humanize.naturalsize(file_size)
-
         outfile = open(outpath, 'wb')
         try:
             with self.rpc.open_file(remote_path, 'rb') as f:
@@ -278,7 +272,6 @@ class PayloadSessionCmd(SessionCmd):
                 bar_fmt = l_bar + '{bar:20}{r_bar}'
                 print('Downloading file: {} ...'.format(remote_path))
                 with tqdm(
-                        #desc='Downloading file: {}'.format(remote_path),
                         desc='  {}'.format(remote_path),
                         bar_format=bar_fmt,
                         ascii=False,
