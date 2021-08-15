@@ -180,8 +180,26 @@ class RATServerCmd(cmd.Cmd):
 
 
 if __name__ == '__main__':
-    host, port = addr = 'localhost', 8000
-    host = 'localhost' if host == '127.0.0.1' else host
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--bind', '-b',
+            metavar='ADDRESS',
+            help='Specify alternate bind address '
+                 '[default: all interfaces]',
+            default='',
+    )
+    parser.add_argument('port',
+            action='store',
+            default=8000, type=int,
+            nargs='?',
+            help='Specify alternate port [default: 8000]',
+    )
+    args = parser.parse_args()
+
+    host, port = addr = args.bind, args.port
+    if host == '127.0.0.1':
+        host = 'localhost'
 
     with ThreadingRATServer(addr) as server:
         t = threading.Thread(target=server.serve_forever)
