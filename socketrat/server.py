@@ -4,6 +4,7 @@ import cmd
 import os
 import socket
 import socketserver
+import sys
 import threading
 import time
 import traceback
@@ -136,7 +137,10 @@ class RATServerCmd(cmd.Cmd):
 
     def do_clear(self, line):
         '''Clear the screen.'''
-        os.system('clear')
+        cmd = 'clear'
+        if sys.platform.startswith('win'):
+            cmd = 'cls'
+        os.system(cmd)
 
     def do_connect(self, line):
         '''Connect to a bind payload.'''
