@@ -73,7 +73,22 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
 
 
 if __name__ == '__main__':
-    host, port = addr = 'localhost', 8000
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('host',
+            help='the host name or ip address to connect to. '
+                 '[default: localhost]',
+            default='localhost',
+            nargs='?',
+    )
+    parser.add_argument('--port', '-p',
+            help='the port number to connect to. '
+                 '[default: 8000]',
+            default=8000,
+    )
+    args = parser.parse_args()
+    host, port = addr = args.host, args.port
 
     funcs = [payload.get_username,
             payload.get_hostname,
