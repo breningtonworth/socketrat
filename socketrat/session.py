@@ -44,7 +44,8 @@ class SessionCmd(cmd.Cmd):
         for c in cmds:
             _c = c
             if not self._command_supported(c):
-                _c = Style.BRIGHT + Fore.RED + '-' + c + Style.RESET_ALL
+                #_c = Style.BRIGHT + Fore.RED + '-' + c + Style.RESET_ALL
+                continue
             _cmds.append(_c)
 
         return super().print_topics(header, _cmds, cmdlen, maxcol)
