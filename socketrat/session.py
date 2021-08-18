@@ -24,6 +24,14 @@ class SessionCmd(cmd.Cmd):
         self.session = session
 
     @property
+    def doc_leader(self):
+        ruler = (self.ruler * len(self.doc_header)) + '\n'
+        s = '\n' + ruler
+        s += 'Platform: {}\n'.format(self.session.platform)
+        s += ruler
+        return s
+
+    @property
     def prompt(self):
         # The 001 and 002 fix an issue.
         # When terminal text wraps, the text overwrites the prompt without these.
@@ -306,6 +314,7 @@ class Session:
         self._username = None
         self._hostname = None
         self._dir = None
+        self._platform = None
 
     @property
     def username(self):
@@ -318,6 +327,12 @@ class Session:
         if self._hostname is None:
             self._hostname = self.rpc.get_hostname()
         return self._hostname
+
+    @property
+    def platform(self):
+        if self._platform is None:
+            self._platform = self.rpc.get_platform()
+        return self._platform
 
     def dir(self):
         '''Returns a list of registered rpc functions.'''
