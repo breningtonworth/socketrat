@@ -27,6 +27,11 @@ def get_hostname():
     return socket.gethostname()
 
 
+def get_platform():
+    import sys
+    return sys.platform
+
+
 def list_dir(path):
     import os
     return os.listdir(path)
