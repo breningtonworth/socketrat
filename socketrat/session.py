@@ -306,6 +306,7 @@ class Session:
         self._username = None
         self._hostname = None
         self._dir = None
+        self._platform = None
 
     @property
     def username(self):
@@ -318,6 +319,12 @@ class Session:
         if self._hostname is None:
             self._hostname = self.rpc.get_hostname()
         return self._hostname
+
+    @property
+    def platform(self):
+        if self._platform is None:
+            self._platform = self.rpc.get_platform()
+        return self._platform
 
     def dir(self):
         '''Returns a list of registered rpc functions.'''
