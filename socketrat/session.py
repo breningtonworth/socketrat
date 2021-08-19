@@ -126,6 +126,18 @@ class SessionCmd(cmd.Cmd):
         '''Clear the console screen.'''
         os.system('clear')
 
+    def do_info(self, line):
+        '''Display remote system information.'''
+        header = '\nSystem information (type info <topic>):'
+        ruler = self.ruler * len(header)
+        info = [
+                ['Platform', self.session.platform],
+                ['Architecture', 'x86'],
+        ]
+        table = tabulate(info, tablefmt='plain')
+        lines = '\n'.join([header, ruler, table])
+        self.stdout.write(lines + '\n\n')
+
 
 class PayloadSessionCmd(SessionCmd):
 
