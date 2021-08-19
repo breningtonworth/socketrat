@@ -171,9 +171,13 @@ class RATServerCmd(cmd.Cmd):
         if sessid not in self.sessions:
             self.error('Unknown session id: {}'.format(sessid))
             return
-        sh = self.SessionCmdClass(self.sessions[sessid])
-        intro = 'Interacting with session {}.'.format(sessid)
-        intro += ' Type help or ? to list commands.\n'
+        session = self.sessions[sessid]
+        sh = self.SessionCmdClass(session)
+
+        intro = 'Interacting with session {} ...'.format(sessid)
+        #intro += ' Type help or ? to list commands.\n'
+
+        sh.cmdqueue.append('info')
         sh.cmdloop(intro=intro)
         print('Detached from session {}.'.format(sessid))
         print()
@@ -198,6 +202,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     host, port = addr = args.bind, args.port
+    if not host:
+        host = '0.0.0.0'
     if host == '127.0.0.1':
         host = 'localhost'
 
@@ -207,8 +213,9 @@ if __name__ == '__main__':
         t.start()
 
         sh = RATServerCmd(server)
-        intro = 'Serving on {} port {}.'.format(host, port)
-        intro += ' Type help or ? to list commands.\n'
+        intro = 'Serving on {} port {} ...\n'.format(host, port)
+        intro += 'Type help or ? to list commands.\n'
+        #sh.cmdqueue.append('help')
         try:
             sh.cmdloop(intro=intro)
         finally:
