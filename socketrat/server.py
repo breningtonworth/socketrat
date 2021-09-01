@@ -216,11 +216,7 @@ if __name__ == '__main__':
         print('Serving on {} port {} ...'.format(host, port))
 
         sh = RATServerCmd(server)
-        #intro = 'Serving on {} port {} ...\n'.format(host, port)
-        #intro += 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
-        #sh.cmdqueue.append('help')
         try:
-            #sh.cmdloop(intro=intro)
             sh.cmdloop()
         finally:
             print('Stopping server ...')
