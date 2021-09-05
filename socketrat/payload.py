@@ -12,6 +12,11 @@ class PayloadRPCHandler(rpc.RPCHandler):
         return s
 
 
+def uname():
+    import platform
+    return platform.uname()
+
+
 def get_file_size(path):
     import os
     return os.path.getsize(path)
