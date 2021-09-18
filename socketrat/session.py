@@ -142,7 +142,7 @@ class SessionCmd(cmd.Cmd):
 class PayloadSessionCmd(SessionCmd):
 
     def all_keylogger(self):
-        return ['start_keylogger', 'dump_keylogger', 'stop_keylogger']
+        return ['keylogger_start', 'keylogger_dump', 'keylogger_stop']
     
     def do_keylogger(self, line):
         '''Log the keys pressed on the remote machine.'''
