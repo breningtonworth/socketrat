@@ -90,3 +90,17 @@ class FileWriter:
         f.write(data)
         f.flush()
 
+
+class KeyloggerService:
+
+    def start(self):
+        # start thread that reads keystrokes and logs them to file.
+        pass
+
+    def dump(self):
+        pass
+
+    def stop(self):
+        # stop logging thread.
+        pass
+
