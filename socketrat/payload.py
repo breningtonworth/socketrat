@@ -93,14 +93,14 @@ class FileWriter:
 
 class KeyloggerService:
 
-    def start(self):
+    def keylogger_start(self):
         # start thread that reads keystrokes and logs them to file.
         pass
 
-    def dump(self):
+    def keylogger_dump(self):
         pass
 
-    def stop(self):
+    def keylogger_stop(self):
         # stop logging thread.
         pass
 
