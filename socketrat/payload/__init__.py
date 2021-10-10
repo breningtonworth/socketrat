@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from . import windows
+
+
 def uname():
     import platform
     return platform.uname()

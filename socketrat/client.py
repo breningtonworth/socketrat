@@ -6,7 +6,6 @@ import sys
 
 from . import connection
 from . import payload
-from . import payload.windows
 from . import rpc
 
 
