@@ -48,11 +48,11 @@ class ReverseClient:
 class BindClient(socketserver.TCPServer):
     #TODO: get this BindClient working.
 
-    def __init__(self, *args, RPCHandlerClass=payload.PayloadRPCHandler, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._functions = dict()
         def create_rpc_handler():
-            rpc_handler = RPCHandlerClass()
+            rpc_handler = ClientRPCHandler()
             for name, func in self._functions.items():
                 rpc_handler.register_function(func, name)
             return rpc_handler
