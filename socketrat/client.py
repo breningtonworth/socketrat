@@ -9,7 +9,7 @@ from . import payload
 from . import rpc
 
 
-class ClientRPCHandler(rpc.RCPHandler):
+class ClientRPCHandler(rpc.RPCHandler):
 
     def rpc_dir(self):
         return list(self._functions)
