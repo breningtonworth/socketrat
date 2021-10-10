@@ -1,17 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from . import rpc
-
-
-class PayloadRPCHandler(rpc.RPCHandler):
-
-    def rpc_dir(self):
-        return list(self._functions)
-
-    def rpc_echo(self, s):
-        return s
-
-
 def uname():
     import platform
     return platform.uname()

@@ -9,14 +9,22 @@ from . import payload
 from . import rpc
 
 
+class ClientRPCHandler(rpc.RCPHandler):
+
+    def rpc_dir(self):
+        return list(self._functions)
+
+    def rpc_echo(self, s):
+        return s
+
+
 class ReverseClient:
 
-    def __init__(self, address, RPCHandlerClass=payload.PayloadRPCHandler):
+    def __init__(self, address):
         self.address = address
-        self.RPCHandlerClass = RPCHandlerClass
         self.socket = socket.create_connection(address)
         self.connection = connection.Connection(self.socket)
-        self.rpc_handler = RPCHandlerClass()
+        self.rpc_handler = ClientRPCHandler()
 
     def __enter__(self):
         return self
