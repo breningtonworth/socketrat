@@ -82,11 +82,11 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
     pass
 
 
-def windows_main():
+def windows_main(args):
     raise NotImplementedError
 
 
-def linux_main():
+def linux_main(args):
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -109,7 +109,7 @@ def linux_main():
             default=8000,
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     host, port = addr = args.host, args.port
 
     with ReverseClient(addr) as client:
@@ -137,13 +137,16 @@ if platform.system() == 'Windows':
 elif platform.system() == 'Linux':
     main = linux_main
 else:
-    def main():
+    def main(*args, **kwargs):
         raise NotImplementedError
 
 
 if __name__ == '__main__':
+    import sys
+
+    args = sys.argv[1:]
     try:
-        main()
+        main(args)
     except NotImplementedError:
         print('*** Platform not supported: {}'.format(platform.system()))
 
