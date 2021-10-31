@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from . import windows
+import platform
+
+if platform.system() == 'Windows':
+    from .windows import *
+elif platform.system() == 'Linux':
+    from .linux import *
 
 
 def uname():
