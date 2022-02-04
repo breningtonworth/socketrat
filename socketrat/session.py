@@ -131,6 +131,8 @@ class SessionCmd(cmd.Cmd):
         header = '\nSystem information (type info <topic>):'
         ruler = self.ruler * len(header)
         info = [
+                ['Username', self.session.username],
+                ['Hostname', self.session.hostname],
                 ['Platform', self.session.platform],
                 ['Architecture', 'x86'],
         ]
