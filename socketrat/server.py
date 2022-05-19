@@ -9,9 +9,6 @@ import threading
 import time
 import traceback
 
-from colorama import colorama_text, Fore, Style
-from tabulate import tabulate
-
 from . import connection
 from . import session
 
@@ -51,12 +48,15 @@ class SimpleRATRequestHandler(socketserver.BaseRequestHandler):
 class RATServer(socketserver.TCPServer):
     allow_reuse_address = True
 
-    def __init__(self, server_address,
-            RequestHandlerClass=SimpleRATRequestHandler,
-            *args, **kwargs):
-        self.sessions = session.SessionContainer()
+    RequestHandler = SimpleRATRequestHandler
+    SessionContainer = session.SessionContainer
+
+    def __init__(self, server_address, RequestHandler=None, *args, **kwargs):
+        if RequestHandler is not None:
+            self.RequestHandler = RequestHandler
+        self.sessions = self.SessionContainer()
         self._close_event = threading.Event()
-        super().__init__(server_address, RequestHandlerClass, *args, **kwargs)
+        super().__init__(server_address, self.RequestHandler, *args, **kwargs)
 
     def __enter__(self):
         return self
@@ -90,13 +90,14 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 class RATServerCmd(cmd.Cmd):
     intro = 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
     prompt = '(socketrat) '
-    ruler = '-'
-    nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
+    #ruler = '-'
+    #nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
+
+    SessionCmd = session.PayloadSessionCmd
 
     def __init__(self, server, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.server = server
-        self.SessionCmdClass = session.PayloadSessionCmd
 
     @property
     def sessions(self):
@@ -104,25 +105,23 @@ class RATServerCmd(cmd.Cmd):
 
     def cmdloop(self, intro=None, *args, **kwargs):
         '''Handle keyboard interrupts during cmdloop.'''
-        with colorama_text(autoreset=True):
+        try:
+            super().cmdloop(intro=intro, *args, **kwargs)
+        except KeyboardInterrupt:
+            print()
+        else:
+            return
+
+        while True:
             try:
-                super().cmdloop(intro=intro, *args, **kwargs)
+                super().cmdloop(intro='', *args, **kwargs)
             except KeyboardInterrupt:
                 print()
             else:
                 return
 
-            while True:
-                try:
-                    super().cmdloop(intro='', *args, **kwargs)
-                except KeyboardInterrupt:
-                    print()
-                else:
-                    return
-
     def onecmd(self, line):
-        with colorama_text(autoreset=True):
-            return super().onecmd(line)
+        return super().onecmd(line)
 
     def emptyline(self):
         pass
@@ -131,10 +130,8 @@ class RATServerCmd(cmd.Cmd):
         self.error('Unknown syntax: {}'.format(line))
 
     def error(self, msg):
-        #TODO: use self.stderr here.
-        print('*** {}'.format(
-            Style.BRIGHT + Fore.RED + msg.capitalize() + Style.RESET_ALL,
-        ))
+        msg = '*** {}'.format(msg.capitalize())
+        print(msg, file=sys.stderr)
 
     def do_clear(self, line):
         '''Clear the screen.'''
@@ -156,7 +153,7 @@ class RATServerCmd(cmd.Cmd):
         table = [(s.id, s.username, s.hostname)
                 for s in self.sessions.values()]
         print()
-        print(tabulate(table, headers=headers))
+        print(table)
         print()
 
     def do_exit(self, line):
@@ -174,7 +171,7 @@ class RATServerCmd(cmd.Cmd):
             self.error('Unknown session id: {}'.format(sessid))
             return
         session = self.sessions[sessid]
-        sh = self.SessionCmdClass(session)
+        sh = self.SessionCmd(session)
 
         intro = 'Interacting with session {} ...'.format(sessid)
         #intro += ' Type help or ? to list commands.\n'

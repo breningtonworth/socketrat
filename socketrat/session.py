@@ -7,17 +7,13 @@ import math
 import os
 import time
 
-from colorama import colorama_text, Fore, Style
-from tabulate import tabulate
-from tqdm import tqdm
-
 from . import connection
 from . import rpc
 
 
 class SessionCmd(cmd.Cmd):
     ruler = '-'
-    nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
+    #nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
     unsup_header = 'Unsupported commands:'
 
     def __init__(self, session, *args, **kwargs):
