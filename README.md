@@ -5,5 +5,5 @@
 
 A Python-based remote administration tool.
 
-> **Note**
+> **Note**: 
 > This project is still under construction.
