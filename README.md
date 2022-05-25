@@ -3,6 +3,7 @@
   socketrat
 </h1>
 
-A remote administration tool made in python.
+A Python-based remote administration tool.
 
-Still under construction.
+> **Note**
+> This project is still under construction.
