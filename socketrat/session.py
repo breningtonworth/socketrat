@@ -48,7 +48,7 @@ class SessionCmd(cmd.Cmd):
         help = {}
         unsupported = list()
         for name in names:
-            if name[:13] == 'requirements_':
+            if name[:13] == 'req_':
                 if not self._command_supported(name[13:]):
                     unsupported.append(name[13:])
             elif name[:5] == 'help_':
@@ -86,8 +86,8 @@ class SessionCmd(cmd.Cmd):
         supported = False
         if hasattr(self, 'do_' + name):
             supported = True
-        if hasattr(self, 'requirements_' + name):
-            cmd_dir = getattr(self, 'requirements_' + name)()
+        if hasattr(self, 'req_' + name):
+            cmd_dir = getattr(self, 'req_' + name)()
             sess_dir = self.session.dir()
             if not all(name in sess_dir for name in cmd_dir):
                 supported = False
@@ -172,7 +172,7 @@ class SessionCmd(cmd.Cmd):
 
 class PayloadSessionCmd(SessionCmd):
 
-    def requirements_keylogger(self):
+    def req_keylogger(self):
         return ['keylogger_start', 'keylogger_dump', 'keylogger_stop']
     
     def do_keylogger(self, line):
@@ -245,14 +245,14 @@ class PayloadSessionCmd(SessionCmd):
 
             print(key, end='')
 
-    def requirements_screenshot(self):
+    def req_screenshot(self):
         return ['screenshot']
 
     def do_screenshot(self, line):
         '''Take a screenshot of the remote machine.'''
         pass
 
-    def requirements_ls(self):
+    def req_ls(self):
         return ['list_dir', 'get_current_dir']
 
     def do_ls(self, line):
@@ -279,7 +279,7 @@ class PayloadSessionCmd(SessionCmd):
             self.columnize(listing)
             print()
 
-    def requirements_cd(self):
+    def req_cd(self):
         return ['change_dir']
 
     def do_cd(self, line):
@@ -294,14 +294,14 @@ class PayloadSessionCmd(SessionCmd):
         except NotADirectoryError:
             self.error('Not a directory: {}'.format(path))
 
-    def requirements_pwd(self):
+    def req_pwd(self):
         return ['get_current_dir']
 
     def do_pwd(self, line):
         '''Print the current working directory of the remote machine.'''
         print(self.rpc.get_current_dir())
     
-    def requirements_cat(self):
+    def req_cat(self):
         return ['open_file']
 
     def complete_cat(self, text, line, begidx, endidx):
@@ -327,7 +327,7 @@ class PayloadSessionCmd(SessionCmd):
         except (FileNotFoundError, IsADirectoryError) as e:
             self.error(str(e))
 
-    def requirements_upload(self):
+    def req_upload(self):
         return ['open_file', 'write_file']
 
     def do_upload(self, line):
@@ -362,7 +362,7 @@ class PayloadSessionCmd(SessionCmd):
                     progress.update(len(chunk))
         print('Upload complete.')
 
-    def requirements_download(self):
+    def req_download(self):
         return ['get_file_size', 'open_file', 'read_file']
 
     def do_download(self, line):
