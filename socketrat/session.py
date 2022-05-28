@@ -66,7 +66,8 @@ class SessionCmd(cmd.Cmd):
                 prevname = name
                 cmd=name[3:]
                 if cmd in unsupported:
-                    cmds_unsup.append(cmd)
+                    #cmds_unsup.append(cmd)
+                    cmds_unsup.append(Style.BRIGHT + Fore.RED + cmd + Style.RESET_ALL)
                 elif cmd in help:
                     cmds_doc.append(cmd)
                     del help[cmd]
@@ -162,11 +163,11 @@ class SessionCmd(cmd.Cmd):
         header = '\nSystem information (type info <topic>):'
         ruler = self.ruler * len(header)
         info = [
-                ['Session ID', self.session.id],
-                ['Username', self.session.username],
-                ['Hostname', self.session.hostname],
-                ['Platform', self.session.platform],
-                ['Architecture', 'x86'],
+                ['Session ID:', self.session.id],
+                ['Username:', self.session.username],
+                ['Hostname:', self.session.hostname],
+                ['Platform:', self.session.platform],
+                ['Architecture:', 'x86'],
         ]
         table = tabulate(info, tablefmt='plain')
         lines = '\n'.join([header, ruler, table])
