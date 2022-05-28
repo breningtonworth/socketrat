@@ -48,9 +48,9 @@ class SessionCmd(cmd.Cmd):
         help = {}
         unsupported = list()
         for name in names:
-            if name[:13] == 'req_':
-                if not self._command_supported(name[13:]):
-                    unsupported.append(name[13:])
+            if name[:4] == 'req_':
+                if not self._command_supported(name[4:]):
+                    unsupported.append(name[4:])
             elif name[:5] == 'help_':
                 help[name[5:]]=1
         names.sort()
