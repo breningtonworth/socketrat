@@ -9,6 +9,7 @@ import time
 
 from colorama import colorama_text, Fore, Style
 from tabulate import tabulate
+from tqdm import tqdm
 
 from . import connection
 from . import rpc
@@ -339,6 +340,8 @@ class PayloadSessionCmd(SessionCmd):
         try:
             local_path, remote_output = line.split()
         except ValueError:
+            self.error('Argument error')
+            print('usage: upload <local_path> <remote_output>')
             return
 
         file_size = os.path.getsize(local_path)
@@ -346,9 +349,13 @@ class PayloadSessionCmd(SessionCmd):
             chunk_size = 1024
             l_bar = '{desc}: {percentage:.0f}%|'
             bar_fmt = l_bar + '{bar:20}{r_bar}'
-            print('Uploading file: {} ...'.format(local_path))
+
+            print()
+            hdr = 'File upload progress ({}):'.format(local_path)
+            print(hdr)
+            print(self.ruler * len(hdr))
             with tqdm(
-                    desc='  {}'.format(local_path),
+                    #desc='  {}'.format(local_path),
                     bar_format=bar_fmt,
                     ascii=False,
                     colour='blue',
@@ -364,7 +371,7 @@ class PayloadSessionCmd(SessionCmd):
                         break
                     rf.write(chunk)
                     progress.update(len(chunk))
-        print('Upload complete.')
+        print()
 
     def req_download(self):
         return ['get_file_size', 'open_file', 'read_file']
@@ -374,6 +381,8 @@ class PayloadSessionCmd(SessionCmd):
         try:
             remote_path, outpath = line.split()
         except ValueError:
+            self.error('Argument error')
+            print('usage: download <remote_path> <output_path>')
             return
 
         file_size = self.rpc.get_file_size(remote_path)
@@ -383,9 +392,15 @@ class PayloadSessionCmd(SessionCmd):
                 chunk_size = 1024
                 l_bar = '{desc}: {percentage:.0f}%|'
                 bar_fmt = l_bar + '{bar:20}{r_bar}'
-                print('Downloading file: {} ...'.format(remote_path))
+
+                #print('Downloading file: {} ...'.format(remote_path))
+                hdr = 'File download progress ({}):'.format(remote_path)
+                print()
+                print(hdr)
+                print(self.ruler * len(hdr))
+
                 with tqdm(
-                        desc='  {}'.format(remote_path),
+                        #desc='{}'.format(remote_path),
                         bar_format=bar_fmt,
                         ascii=False,
                         colour='blue',
@@ -406,7 +421,7 @@ class PayloadSessionCmd(SessionCmd):
             self.error(str(e))
         finally:
             outfile.close()
-        print('Download complete.')
+        print()
 
 
 class Session:

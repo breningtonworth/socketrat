@@ -14,6 +14,7 @@ setup(
             'pyreadline>=2.1',
             'colorama',
             'tabulate',
+            'tqdm',
         ],
 )
 
