@@ -4,6 +4,7 @@ import struct
 
 
 class Connection:
+    max_packet_size = 4096
 
     def __init__(self, sock):
         self._sock = sock
@@ -26,11 +27,7 @@ class Connection:
     def recv(self):
         data = self._recvall(self._header_struct.size)
         (block_length,) = self._header_struct.unpack(data)
-        #print('SOCK: {}, LENGTH: {}'.format(id(self._sock), block_length))
-        if block_length > 4096:
-            # A large recv length can raise a MemoryError.
-            # Close connection on anything > 4096.
-            #print('POTENTIAL MEMORY ERROR, CLOSING CONNECTION.')
+        if block_length > self.max_packet_size:
             self.close()
             raise ConnectionClosed
         return self._recvall(block_length)
