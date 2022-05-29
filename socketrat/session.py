@@ -307,7 +307,7 @@ class PayloadSessionCmd(SessionCmd):
         print(self.rpc.get_current_dir())
     
     def req_cat(self):
-        return ['open_file']
+        return ['open_file', 'list_dir']
 
     def complete_cat(self, text, line, begidx, endidx):
         files = self.rpc.list_dir('.')
