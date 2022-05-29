@@ -21,10 +21,10 @@ class ClientRPCHandler(rpc.RPCHandler):
 
 class ReverseClient:
 
-    def __init__(self, address):
-        self.address = address
-        self.socket = socket.create_connection(address)
-        self.connection = connection.Connection(self.socket)
+    def __init__(self, addr):
+        self.addr = addr
+        self.sock = socket.create_connection(addr)
+        self.connection = connection.Connection(self.sock)
         self.rpc_handler = ClientRPCHandler()
 
     def __enter__(self):
