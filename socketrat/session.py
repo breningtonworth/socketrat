@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import base64
 import cmd
 import collections
+from contextlib import contextmanager
 import itertools
 import math
 import os
@@ -424,12 +426,39 @@ class PayloadSessionCmd(SessionCmd):
         print()
 
 
+class RemoteFile:
+
+    def __init__(self, file_id, rpc):
+        self.file_id = file_id
+        self.rpc = rpc
+
+    def read(self, size):
+        data = self.rpc.read_file(self.file_id, size)
+        return base64.urlsafe_b64decode(data)
+
+    def write(self, data):
+        data = base64.urlsafe_b64encode(data)
+        self.rpc.write_file(self.file_id, data)
+
+
+class SessionRPCProxy(rpc.RPCProxy):
+
+    @contextmanager
+    def open_file(self, path, mode='r'):
+        file_id = self.__getattr__('open_file')(path, mode)
+        rfile = RemoteFile(file_id, self)
+        try:
+            yield rfile
+        finally:
+            self.close_file(file_id)
+
+
 class Session:
     
     def __init__(self, socket):
         self.sock = socket
         self.connection = connection.Connection(socket)
-        self.rpc = rpc.RPCProxy(self.connection)
+        self.rpc = SessionRPCProxy(self.connection)
         self.last_response = time.time()
         self._username = None
         self._hostname = None

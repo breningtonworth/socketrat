@@ -28,6 +28,7 @@ class Connection:
         data = self._recvall(self._header_struct.size)
         (block_length,) = self._header_struct.unpack(data)
         if block_length > self.max_packet_size:
+            # Avoid MemoryError
             self.close()
             raise ConnectionClosed
         return self._recvall(block_length)

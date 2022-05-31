@@ -1,18 +1,5 @@
 # -*- coding: utf-8 -*-
 
-'''
-%####%%%%%%%%%%####%
-%*+++%%%%%%%%%#+++#%
-%*+++**********+++#%
-%*++++++++++++++++#%
-%####+++###*+++###%%
-%####+++#%%#++*####%
-%*+++%%%%%%%%%#+++#%                    8           w              w   
-%#***%%%***#%%#***#%    d88b .d8b. .d8b 8.dP .d88b w8ww 8d8b .d88 w8ww 
-%%%%%%%%+++*%%%%%%%%    `Yb. 8' .8 8    88b  8.dP'  8   8P   8  8  8   
-%%%%%%%%####%%%%%%%%    Y88P `Y8P' `Y8P 8 Yb `Y88P  Y8P 8    `Y88  Y8P
-'''
-
 import cmd
 import os
 import socket
@@ -22,7 +9,7 @@ import threading
 import time
 import traceback
 
-from colorama import colorama_text, Fore, Style
+from colorama import colorama_text, Fore, Back, Style
 from tabulate import tabulate
 
 from . import connection
@@ -104,9 +91,8 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 
 
 class RATServerCmd(cmd.Cmd):
-    banner = __doc__
     greeting = 'Welcome to the socketrat shell.\nType help or ? to list commands.\n'
-    intro = banner + greeting
+    intro = greeting
     outro = 'Thank you for using socketrat.'
     prompt = '(socketrat) '
     ruler = '-'
@@ -238,10 +224,11 @@ if __name__ == '__main__':
         t.start()
 
         sh = RATServerCmd(server)
-        print(sh.banner)
+
         sh.info('Listening on {} port {} ...'.format(host, port))
         print()
         print(sh.greeting)
+
         try:
             sh.cmdloop(intro='')
         finally:
