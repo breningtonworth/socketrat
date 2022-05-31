@@ -9,7 +9,6 @@ import threading
 import time
 import traceback
 
-from colorama import colorama_text, Fore, Back, Style
 from tabulate import tabulate
 
 from . import connection
@@ -96,7 +95,7 @@ class RATServerCmd(cmd.Cmd):
     outro = 'Thank you for using socketrat.'
     prompt = '(socketrat) '
     ruler = '-'
-    nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
+    nohelp = '*** No help on %s'
 
     SessionCmd = session.PayloadSessionCmd
 
@@ -110,21 +109,20 @@ class RATServerCmd(cmd.Cmd):
 
     def cmdloop(self, intro=None, *args, **kwargs):
         '''Handle keyboard interrupts during cmdloop.'''
-        with colorama_text(autoreset=True):
+        try:
+            super().cmdloop(intro=intro, *args, **kwargs)
+        except KeyboardInterrupt:
+            print()
+        else:
+            return
+
+        while True:
             try:
-                super().cmdloop(intro=intro, *args, **kwargs)
+                super().cmdloop(intro='', *args, **kwargs)
             except KeyboardInterrupt:
                 print()
             else:
                 return
-
-            while True:
-                try:
-                    super().cmdloop(intro='', *args, **kwargs)
-                except KeyboardInterrupt:
-                    print()
-                else:
-                    return
 
     def onecmd(self, line):
         return super().onecmd(line)
@@ -136,14 +134,10 @@ class RATServerCmd(cmd.Cmd):
         self.error('Unknown syntax: {}'.format(line))
 
     def info(self, msg):
-        print('* {}'.format(
-            Style.BRIGHT + Fore.BLUE + msg.capitalize() + Style.RESET_ALL,
-        ))
+        print('*', msg.capitalize())
 
     def error(self, msg):
-        print('*** {}'.format(
-            Style.BRIGHT + Fore.RED + msg.capitalize() + Style.RESET_ALL,
-        ))
+        print('***', msg.capitalize())
 
     def do_clear(self, line):
         '''Clear the screen.'''

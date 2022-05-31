@@ -9,7 +9,6 @@ import math
 import os
 import time
 
-from colorama import colorama_text, Fore, Style
 from tabulate import tabulate
 from tqdm import tqdm
 
@@ -19,7 +18,7 @@ from . import rpc
 
 class SessionCmd(cmd.Cmd):
     ruler = '-'
-    nohelp = '*** {}'.format(Style.BRIGHT + Fore.RED + 'No help on %s' + Style.RESET_ALL)
+    nohelp = '*** No help on %s'
     unsup_header = 'Unsupported commands:'
 
     def __init__(self, session, *args, **kwargs):
@@ -28,14 +27,10 @@ class SessionCmd(cmd.Cmd):
 
     @property
     def prompt(self):
-        # The 001 and 002 fix an issue.
-        # When terminal text wraps, the text overwrites the prompt without these.
         return '({}:{}:{}) '.format(
                 self.session.id,
                 self.session.username,
-                #'\001' + Style.BRIGHT + Fore.BLUE + self.session.id + Style.RESET_ALL + '\002',
                 self.session.hostname,
-                #'\001' + Style.BRIGHT + Fore.GREEN + self.session.username + '@' + self.session.hostname + Style.RESET_ALL + '\002'
         )
 
     @property
@@ -69,8 +64,7 @@ class SessionCmd(cmd.Cmd):
                 prevname = name
                 cmd=name[3:]
                 if cmd in unsupported:
-                    #cmds_unsup.append(cmd)
-                    cmds_unsup.append(Style.BRIGHT + Fore.RED + cmd + Style.RESET_ALL)
+                    cmds_unsup.append(cmd)
                 elif cmd in help:
                     cmds_doc.append(cmd)
                     del help[cmd]
@@ -102,50 +96,46 @@ class SessionCmd(cmd.Cmd):
 
     def cmdloop(self, intro=None, *args, **kwargs):
         '''Handle keyboard interrupts during cmdloop.'''
-        with colorama_text(autoreset=True):
+        try:
+            super().cmdloop(intro=intro, *args, **kwargs)
+        except KeyboardInterrupt:
+            print()
+        else:
+            return
+
+        while True:
             try:
-                super().cmdloop(intro=intro, *args, **kwargs)
+                super().cmdloop(intro='', *args, **kwargs)
             except KeyboardInterrupt:
                 print()
             else:
                 return
 
-            while True:
-                try:
-                    super().cmdloop(intro='', *args, **kwargs)
-                except KeyboardInterrupt:
-                    print()
-                else:
-                    return
-
     def onecmd(self, line):
-        with colorama_text(autoreset=True):
-            cmd, arg, line = self.parseline(line)
-            if not line:
-                return self.emptyline()
-            if cmd is None:
-                return self.default(line)
-            self.lastcmd = line
-            if line == 'EOF':
-                self.lastcmd = ''
-            if cmd == '':
-                return self.default(line)
+        cmd, arg, line = self.parseline(line)
+        if not line:
+            return self.emptyline()
+        if cmd is None:
+            return self.default(line)
+        self.lastcmd = line
+        if line == 'EOF':
+            self.lastcmd = ''
+        if cmd == '':
+            return self.default(line)
 
-            try:
-                func = getattr(self, 'do_' + cmd)
-            except AttributeError:
-                return self.default(line)
+        try:
+            func = getattr(self, 'do_' + cmd)
+        except AttributeError:
+            return self.default(line)
 
-            if not self._command_supported(cmd):
-                self.error('Command not supported by remote client')
-                return
+        if not self._command_supported(cmd):
+            self.error('Command not supported by remote client')
+            return
 
-            return func(arg)
+        return func(arg)
 
     def error(self, msg):
-        print('*** {}'.format(
-            Style.BRIGHT + Fore.RED + msg.capitalize() + Style.RESET_ALL,
-        ))
+        print('***', msg.capitalize())
 
     def emptyline(self):
         return
@@ -405,7 +395,7 @@ class PayloadSessionCmd(SessionCmd):
                         #desc='{}'.format(remote_path),
                         bar_format=bar_fmt,
                         ascii=False,
-                        colour='blue',
+                        #colour='blue',
                         unit="B",
                         unit_scale=True,
                         unit_divisor=chunk_size,

@@ -12,7 +12,6 @@ setup(
         #""",
         install_requires=[
             'pyreadline>=2.1',
-            'colorama',
             'tabulate',
             'tqdm',
         ],
