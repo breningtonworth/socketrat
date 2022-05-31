@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 
-from tabulate import tabulate
+import tabulate
 
 from . import connection
 from . import session
@@ -92,18 +92,33 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 class RATServerCmd(cmd.Cmd):
     intro = 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
     prompt = '(socketrat) '
-    ruler = '-'
-    nohelp = '*** No help on %s'
 
     SessionCmd = session.PayloadSessionCmd
+    tablefmt = None
 
     def __init__(self, server, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.server = server
+        if self.tablefmt is None:
+            self.tablefmt = self._simple_tablefmt()
 
     @property
     def sessions(self):
         return self.server.sessions
+
+    def _simple_tablefmt(self, ruler=None):
+        if ruler is None:
+            ruler = self.ruler
+        return tabulate.TableFormat(
+            lineabove=tabulate.Line('', ruler, ' ', ''),
+            linebelowheader=tabulate.Line('', ruler, ' ', ''),
+            linebetweenrows=None,
+            linebelow=tabulate.Line('', ruler, ' ', ''),
+            headerrow=tabulate.DataRow('', ' ', ''),
+            datarow=tabulate.DataRow('', ' ', ''),
+            padding=0,
+            with_header_hide=['lineabove', 'linebelow'],
+        )
 
     def cmdloop(self, intro=None, *args, **kwargs):
         '''Handle keyboard interrupts during cmdloop.'''
@@ -153,12 +168,16 @@ class RATServerCmd(cmd.Cmd):
         if not self.sessions:
             self.error('No clients connected')
             return
+
         headers = ['ID', 'Username', 'Hostname']
         table = [(s.id, s.username, s.hostname)
                 for s in self.sessions.values()]
-        print()
-        print(tabulate(table, headers=headers))
-        print()
+
+        t = tabulate.tabulate(table,
+                headers=headers,
+                tablefmt=self.tablefmt,
+        )
+        print('\n{}\n'.format(t))
 
     def do_exit(self, line):
         '''Exit the shell.'''
