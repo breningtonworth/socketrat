@@ -92,19 +92,19 @@ def _linux_main(args):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
             dest='subcommand',
-            metavar='subcommand',
+            #metavar='subcommand',
     )
     subparsers.required = True
 
     connect_parser = subparsers.add_parser('connect')
     connect_parser.add_argument('host',
-            help='the host name or ip address to connect to. '
+            help='The host name or ip address to connect to '
                  '[default: localhost]',
             default='localhost',
             nargs='?',
     )
     connect_parser.add_argument('--port', '-p',
-            help='the port number to connect to. '
+            help='The port number to connect to '
                  '[default: 8000]',
             default=8000,
     )
