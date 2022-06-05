@@ -82,11 +82,11 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
     pass
 
 
-def windows_main(args):
+def _windows_main(args):
     raise NotImplementedError
 
 
-def linux_main(args):
+def _linux_main(args):
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -133,9 +133,9 @@ def linux_main(args):
 
 
 if platform.system() == 'Windows':
-    main = windows_main
+    main = _windows_main
 elif platform.system() == 'Linux':
-    main = linux_main
+    main = _linux_main
 else:
     def main(*args, **kwargs):
         raise NotImplementedError
