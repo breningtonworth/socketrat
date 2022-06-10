@@ -120,13 +120,15 @@ def _linux_main(args):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
             dest='command',
-            help='commands',
+            help='Choose from the following commands:',
+            metavar='command',
     )
     subparsers.required = True
 
     connect_parser = subparsers.add_parser('connect',
             help='Connect to a socketrat server [reverse payload]'
     )
+    connect_parser.set_defaults(func=_linux_connect)
     connect_parser.add_argument('host',
             help='Specify alternate hostname or IP address '
                  '[default: localhost]',
@@ -142,6 +144,7 @@ def _linux_main(args):
     listen_parser = subparsers.add_parser('listen',
             help='Listen for connections from a socketrat server [bind payload]',
     )
+    listen_parser.set_defaults(func=_linux_listen)
     listen_parser.add_argument('--bind', '-b',
             help='Specify alternate bind address [default: all interfaces]',
             metavar='ADDRESS',
@@ -154,11 +157,7 @@ def _linux_main(args):
     )
 
     args = parser.parse_args(args)
-
-    if args.command == 'connect':
-        _linux_connect(args)
-    elif args.command == 'listen':
-        _linux_listen(args)
+    args.func(args)
 
 
 if platform.system() == 'Windows':
