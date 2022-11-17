@@ -19,31 +19,12 @@ class PayloadRPCHandler(rpc.RPCHandler):
     def rpc_echo(self, s):
         return s
 
+class PayloadRequestHandler(socketserver.BaseRequestHandler):
 
-class Payload:
-
-    def __init__(self, sock):
-        self.sock = sock
-        self.connection = connection.Connection(self.sock)
-        self.rpc_handler = PayloadRPCHandler()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.close()
-
-    def close(self):
-        self.connection.close()
-
-    def serve_forever(self):
-        self.rpc_handler.handle_connection(self.connection)
-
-    def register_function(self, *args, **kwargs):
-        self.rpc_handler.register_function(*args, **kwargs)
-
-    def register_instance(self, *args, **kwargs):
-        self.rpc_handler.register_instance(*args, **kwargs)
+    def handle(self):
+        sock = self.request
+        handler = PayloadRPCHandler()
+        handler.handle_socket(sock)
 
 
 class ReversePayload(Payload):
@@ -60,38 +41,6 @@ class BindPayload(Payload):
         server.bind(addr)
         server.listen(1)
         client, _ = server.accept()
-
-
-class BindClient(socketserver.TCPServer):
-    #TODO: get this BindClient working.
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._functions = dict()
-        def create_rpc_handler():
-            rpc_handler = ClientRPCHandler()
-            for name, func in self._functions.items():
-                rpc_handler.register_function(func, name)
-            return rpc_handler
-        self.RPCHandlerClass = create_rpc_handler
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        self.close()
-
-    def close(self):
-        self.server_close()
-    
-    def register_function(self, func, name=None):
-        if name is None:
-            name = func.__name__
-        self._functions[name] = func
-
-
-class ThreadingBindClient(socketserver.ThreadingMixIn, BindClient):
-    pass
 
 
 class FileService(FileOpener, FileReader, FileWriter):
