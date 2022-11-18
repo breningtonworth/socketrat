@@ -5,6 +5,8 @@ from contextlib import contextmanager
 import pickle
 import threading
 
+from . import connection
+
 
 class RPCProxy:
     
@@ -59,4 +61,8 @@ class RPCHandler:
                     connection.send(pickle.dumps(rep))
         except EOFError:
             pass
+
+    def handle_socket(self, sock):
+        conn = connection.Connection(sock)
+        self.handle_connection(conn)
 

