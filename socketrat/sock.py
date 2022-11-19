@@ -7,13 +7,19 @@ import time
 
 class TCPClient:
 
-    def __init__(self, addr, retry_interval=1):
+    def __init__(self, addr, retry_interval=1, logConnections=True):
         self.addr = addr
         self.retry_interval = retry_interval
+        self.logConnections = logConnections
 
     def connect_forever(self):
         while True:
-            sock = socket.create_connection(self.addr)
+            try:
+                sock = socket.create_connection(self.addr)
+            except ConnectionRefusedError:
+                pass
+            else:
+                self.handle_connection(sock)
             time.sleep(self.retry_interval)
 
 

