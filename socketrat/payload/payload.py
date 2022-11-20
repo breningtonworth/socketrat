@@ -28,7 +28,12 @@ class PayloadRPCDispatcher(rpc.RPCHandler):
 class PayloadRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        self.server.handle_request(self.request)
+        #self.server.handle_request(self.request)
+        data = self.decode_request_data(data)
+        response = self.server._marshalled_dispatch(data)
+
+    def decode_request_data(self, data):
+        return data
 
 
 class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
