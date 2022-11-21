@@ -30,11 +30,17 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
+    RequestHandler = TCPPayloadRequestHandler
 
-    def __init__(self, server_address):
+    def __init__(self, server_address,
+            RequestHandler=None):
+        if RequestHandler is None:
+            RequestHandler = self.RequestHandler
+
         TCPPayload.__init__(self)
         socketserver.TCPServer.__init__(self,
             server_address,
+            RequestHandler,
         )
 
 
