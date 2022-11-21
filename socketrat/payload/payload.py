@@ -34,16 +34,31 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         try:
             while True:
-                req = self.connection.recv()
-                func_name, args, kwargs = pickle.loads(req)
+                req = self.recv()
+                func_name, args, kwargs = self.loads(req)
                 try:
-                    r = self.payload._dispatch(func_name, args, kwargs)
+                    r = self.execute(func_name, args, kwargs)
                 except Exception as e:
-                    self.connection.send(pickle.dumps(e))
+                    self.connection.send(self.dumps(e))
                 else:
-                    self.connection.send(pickle.dumps(rep))
+                    self.send(self.dumps(rep))
         except EOFError:
             pass
+
+    def send(self, data):
+        self.connection.send(data)
+
+    def recv(self):
+        return self.connection.recv()
+
+    def loads(self, data):
+        return self.marshaller.loads(data)
+
+    def dumps(self, obj):
+        return self.marshaller.dumps(obj)
+
+    def execute(self, func_name, args, kwargs):
+        self.payload.execute(func_name, args, kwargs)
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
