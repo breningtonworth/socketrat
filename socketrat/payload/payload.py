@@ -10,11 +10,17 @@ from .. import rpc
 
 
 class TCPPayload(rpc.RPCHandler):
-    Connection = sock.Connection
+    Connection = sock.TCPConnection
 
     def handle_connection(self, sock):
         conn = self.Connection(sock)
         return super().handle_connection(conn)
+
+    def register_file_service(self, mode):
+        pass
+
+    def register_keylogger(self):
+        pass
 
 
 class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
