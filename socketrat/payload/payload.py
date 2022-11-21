@@ -30,24 +30,18 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
         self.payload.handle_connection(self.request)
 
 
-class TCPBindPayload(TCPPayload):
+class TCPBindPayload(socketserver.TCPServer, TCPPayload):
 
     def __init__(self):
-        self.server = socketserver.TCPServer(
-                RequestHandlerClass=RequestHandler,
-        )
-
-    def serve_forever(self):
-        return self.server.serve_forever()
+        TCPPayload.__init__(self)
+        socketserver.TCPServer.__init__(self)
 
 
-class TCPReversePayload(TCPPayload):
+class TCPReversePayload(sock.TCPClient, TCPPayload):
 
     def __init__(self, addr, retry_interval=1):
-        self.client = TCPClient()
-
-    def connect_forever(self):
-        pass
+        TCPPayload.__init__(self)
+        sock.TCPClient.__init__(self)
 
 
 def uname():
