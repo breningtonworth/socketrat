@@ -29,14 +29,14 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         try:
             while True:
-                req = self.recv()
-                func_name, args, kwargs = self.loads(req)
+                data = self.recv()
+                func_name, args, kwargs = self.loads(data)
                 try:
                     r = self.dispatch(func_name, args, kwargs)
                 except Exception as e:
-                    self.connection.send(self.dumps(e))
+                    self.send(self.dumps(e))
                 else:
-                    self.send(self.dumps(rep))
+                    self.send(self.dumps(r))
         except EOFError:
             pass
 
