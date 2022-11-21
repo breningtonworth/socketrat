@@ -23,7 +23,7 @@ class TCPClient:
             time.sleep(self.retry_interval)
 
 
-class Connection:
+class TCPConnection:
     max_packet_size = 4096
 
     def __init__(self, sock):
