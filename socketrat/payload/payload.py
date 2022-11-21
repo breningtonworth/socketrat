@@ -24,16 +24,9 @@ class TCPPayload(rpc.RPCHandler):
 
 
 class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
-    Payload = TCPPayload
-
-    def __init__(self, request, client_address, server, payload=None):
-        if payload is None:
-            payload = self.Payload()
-        self.payload = payload
-        super().__init__(request, client_address, server)
 
     def handle(self):
-        self.payload.handle_connection(self.request)
+        self.server.handle_connection(self.request)
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
