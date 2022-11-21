@@ -38,9 +38,11 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
 
-    def __init__(self):
+    def __init__(self, server_address):
         TCPPayload.__init__(self)
-        socketserver.TCPServer.__init__(self)
+        socketserver.TCPServer.__init__(self,
+            server_address,
+        )
 
 
 class TCPReversePayload(sock.TCPClient, TCPPayload):
