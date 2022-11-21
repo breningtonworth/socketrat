@@ -9,7 +9,7 @@ from .. import sock
 from .. import rpc
 
 
-class SimpleSocketRATPayload(rpc.RPCHandler):
+class TCPPayload(rpc.RPCHandler):
     Connection = sock.Connection
 
     def handle_connection(self, sock):
@@ -17,8 +17,8 @@ class SimpleSocketRATPayload(rpc.RPCHandler):
         return super().handle_connection(conn)
 
 
-class SimpleSocketRATPayloadRequestHandler(socketserver.BaseRequestHandler):
-    Payload = SimpleSocketPayload
+class PayloadRequestHandler(socketserver.BaseRequestHandler):
+    Payload = TCPPayload
 
     def __init__(self, request, client_address, server, payload=None):
         if payload is None:
@@ -27,7 +27,7 @@ class SimpleSocketRATPayloadRequestHandler(socketserver.BaseRequestHandler):
         super().__init__(request, client_address, server)
 
     def handle(self):
-        self.payload.handle_request(self.request)
+        self.payload.handle_connection(self.request)
 
 
 class TCPBindPayload(SimpleSocketRATPayload):
