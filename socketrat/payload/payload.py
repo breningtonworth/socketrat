@@ -59,8 +59,7 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
 class TCPPayload(Payload):
     RequestHandler = TCPPayloadRequestHandler
 
-    def handle_connection(self, sock):
-        request = sock
+    def handle_request(self, request):
         client_address = None
         return self.RequestHandler(
             request,
