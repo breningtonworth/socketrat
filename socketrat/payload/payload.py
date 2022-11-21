@@ -9,7 +9,7 @@ from .. import sock
 from .. import rpc
 
 
-class TCPPayload(rpc.RPCDispatcher):
+class Payload(rpc.RPCDispatcher):
 
     def register_file_service(self, mode):
         pass
@@ -54,6 +54,19 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
 
     def dispatch(self, func_name, args, kwargs):
         self.payload.dispatch(func_name, args, kwargs)
+
+
+class TCPPayload(Payload):
+    RequestHandler = TCPPayloadRequestHandler
+
+    def handle_connection(self, sock):
+        request = sock
+        client_address = None
+        return self.RequestHandler(
+            request,
+            client_address,
+            self,
+        )
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
