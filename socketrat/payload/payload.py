@@ -9,12 +9,7 @@ from .. import sock
 from .. import rpc
 
 
-class TCPPayload(rpc.RPCHandler):
-    Connection = sock.TCPConnection
-
-    def handle_connection(self, sock):
-        conn = self.Connection(sock)
-        return super().handle_connection(conn)
+class TCPPayload(rpc.RPCDispatcher):
 
     def register_file_service(self, mode):
         pass
@@ -37,7 +32,7 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
                 req = self.recv()
                 func_name, args, kwargs = self.loads(req)
                 try:
-                    r = self.execute(func_name, args, kwargs)
+                    r = self.dispatch(func_name, args, kwargs)
                 except Exception as e:
                     self.connection.send(self.dumps(e))
                 else:
@@ -57,8 +52,8 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
     def dumps(self, obj):
         return self.marshaller.dumps(obj)
 
-    def execute(self, func_name, args, kwargs):
-        self.payload.execute(func_name, args, kwargs)
+    def dispatch(self, func_name, args, kwargs):
+        self.payload.dispatch(func_name, args, kwargs)
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
