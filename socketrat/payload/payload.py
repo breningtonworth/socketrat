@@ -24,9 +24,26 @@ class TCPPayload(rpc.RPCHandler):
 
 
 class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
+    Connection = sock.TCPConnection
+    marshaller = pickle
+
+    def setup(self):
+        self.payload = self.server
+        self.connection = self.Connection(self.request)
 
     def handle(self):
-        self.server.handle_connection(self.request)
+        try:
+            while True:
+                req = self.connection.recv()
+                func_name, args, kwargs = pickle.loads(req)
+                try:
+                    r = self.payload._dispatch(func_name, args, kwargs)
+                except Exception as e:
+                    self.connection.send(pickle.dumps(e))
+                else:
+                    self.connection.send(pickle.dumps(rep))
+        except EOFError:
+            pass
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
