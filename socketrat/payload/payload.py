@@ -9,15 +9,15 @@ from .. import sock
 from .. import rpc
 
 
-class SimpleSocketPayload(rpc.RPCHandler):
+class SimpleSocketRATPayload(rpc.RPCHandler):
     Connection = sock.Connection
 
-    def handle_request(self, request):
-        conn = self.Connection(request)
+    def handle_connection(self, sock):
+        conn = self.Connection(sock)
         return super().handle_connection(conn)
 
 
-class PayloadRequestHandler(socketserver.BaseRequestHandler):
+class SimpleSocketRATPayloadRequestHandler(socketserver.BaseRequestHandler):
     Payload = SimpleSocketPayload
 
     def __init__(self, request, client_address, server, payload=None):
@@ -30,7 +30,7 @@ class PayloadRequestHandler(socketserver.BaseRequestHandler):
         self.payload.handle_request(self.request)
 
 
-class TCPBindPayload(SimpleSocketPayload):
+class TCPBindPayload(SimpleSocketRATPayload):
 
     def __init__(self):
         self.server = socketserver.TCPServer(
