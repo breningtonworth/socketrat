@@ -64,7 +64,7 @@ class TCPPayload(Payload):
             self.RequestHandler = RequestHandler
 
     def handle_request(self, request):
-        client_address = None
+        client_address = request.getpeername()
         return self.RequestHandler(
             request,
             client_address,
