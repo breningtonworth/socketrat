@@ -59,6 +59,10 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
 class TCPPayload(Payload):
     RequestHandler = TCPPayloadRequestHandler
 
+    def __init__(self, RequestHandler=None):
+        if RequestHandler is not None:
+            self.RequestHandler = RequestHandler
+
     def handle_request(self, request):
         client_address = None
         return self.RequestHandler(
@@ -69,17 +73,14 @@ class TCPPayload(Payload):
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
-    RequestHandler = TCPPayloadRequestHandler
 
-    def __init__(self, server_address,
-            RequestHandler=None):
-        if RequestHandler is None:
-            RequestHandler = self.RequestHandler
-
-        TCPPayload.__init__(self)
+    def __init__(self, server_address, RequestHandler=None):
+        TCPPayload.__init__(self,
+            RequestHandler=RequestHandler,
+        )
         socketserver.TCPServer.__init__(self,
             server_address,
-            RequestHandler,
+            self.RequestHandler,
         )
 
 
