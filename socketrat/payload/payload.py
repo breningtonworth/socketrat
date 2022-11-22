@@ -53,7 +53,7 @@ class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
         return self.marshaller.dumps(obj)
 
     def dispatch(self, func_name, args, kwargs):
-        self.payload.dispatch(func_name, args, kwargs)
+        return self.payload.dispatch(func_name, args, kwargs)
 
 
 class TCPPayload(Payload):
