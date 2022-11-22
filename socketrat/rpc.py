@@ -25,7 +25,7 @@ class RPCProxy:
         return do_rpc
 
 
-class RPCHandler:
+class RPCDispatcher:
     
     def __init__(self):
         self._functions = dict()
@@ -46,17 +46,6 @@ class RPCHandler:
                 if callable(attr):
                     self._functions[attr_name] = attr
 
-    def handle_connection(self, connection):
-        try:
-            while True:
-                req = connection.recv()
-                func_name, args, kwargs = pickle.loads(req)
-                try:
-                    rep = self._functions[func_name](*args, **kwargs)
-                except Exception as e:
-                    connection.send(pickle.dumps(e))
-                else:
-                    connection.send(pickle.dumps(rep))
-        except EOFError:
-            pass
+    def dispatch(self, func_name, args, kwargs):
+        return self._functions[func_name](*args, **kwargs)
 
