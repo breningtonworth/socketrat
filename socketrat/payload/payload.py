@@ -50,14 +50,6 @@ def get_current_dir():
     return os.getcwd()
 
 
-class FileService:
-
-    def __new__(cls, r=True, w=True):
-        class _FileService(FileOpener, FileReader, FileWriter):
-            pass
-        return _FileService()
-
-
 class FileOpener:
 
     def __init__(self):
