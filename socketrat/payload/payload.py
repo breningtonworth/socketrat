@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import pickle
 import platform
 import socket
 import socketserver
