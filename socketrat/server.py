@@ -11,7 +11,7 @@ import traceback
 
 import tabulate
 
-from . import connection
+from . import sock
 from . import session
 
 
@@ -33,7 +33,7 @@ class SimpleRATRequestHandler(socketserver.BaseRequestHandler):
                 #TODO: maybe have max retry for response?
                 #      For now just disconnect.
                 break
-            except connection.ConnectionClosed:
+            except sock.ConnectionClosed:
                 break
             except (ConnectionResetError, BrokenPipeError, OSError):
                 break

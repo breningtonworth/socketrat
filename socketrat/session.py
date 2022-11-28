@@ -12,7 +12,7 @@ import time
 from tabulate import tabulate
 from tqdm import tqdm
 
-from . import connection
+from . import sock
 from . import rpc
 
 
@@ -297,7 +297,7 @@ class PayloadSessionCmd(SessionCmd):
         print(self.rpc.get_current_dir())
     
     def req_cat(self):
-        return ['open_file', 'list_dir']
+        return ['file_open', 'file_read', 'file_close', 'list_dir']
 
     def complete_cat(self, text, line, begidx, endidx):
         files = self.rpc.list_dir('.')
@@ -309,7 +309,7 @@ class PayloadSessionCmd(SessionCmd):
         '''Display the contents of a remote file.'''
         name = line
         try:
-            with self.rpc.open_file(name, 'rb') as f:
+            with self.rpc.file_open(name, 'rb') as f:
                 while True:
                     chunk = f.read(4096)
                     if not chunk:
@@ -323,7 +323,7 @@ class PayloadSessionCmd(SessionCmd):
             self.error(str(e))
 
     def req_upload(self):
-        return ['open_file', 'write_file']
+        return ['file_open', 'file_write', 'file_close']
 
     def do_upload(self, line):
         '''Upload a file to the remote machine.'''
@@ -335,7 +335,7 @@ class PayloadSessionCmd(SessionCmd):
             return
 
         file_size = os.path.getsize(local_path)
-        with open(local_path, 'rb') as lf, self.rpc.open_file(remote_output, 'wb') as rf:
+        with open(local_path, 'rb') as lf, self.rpc.file_open(remote_output, 'wb') as rf:
             chunk_size = 1024
             l_bar = '{desc}: {percentage:.0f}%|'
             bar_fmt = l_bar + '{bar:20}{r_bar}'
@@ -364,7 +364,7 @@ class PayloadSessionCmd(SessionCmd):
         print()
 
     def req_download(self):
-        return ['get_file_size', 'open_file', 'read_file']
+        return ['get_file_size', 'file_open', 'file_read', 'file_close']
 
     def do_download(self, line):
         '''Download a file from the remote machine.'''
@@ -378,7 +378,7 @@ class PayloadSessionCmd(SessionCmd):
         file_size = self.rpc.get_file_size(remote_path)
         outfile = open(outpath, 'wb')
         try:
-            with self.rpc.open_file(remote_path, 'rb') as f:
+            with self.rpc.file_open(remote_path, 'rb') as f:
                 chunk_size = 1024
                 l_bar = '{desc}: {percentage:.0f}%|'
                 bar_fmt = l_bar + '{bar:20}{r_bar}'
@@ -421,31 +421,31 @@ class RemoteFile:
         self.rpc = rpc
 
     def read(self, size):
-        data = self.rpc.read_file(self.file_id, size)
+        data = self.rpc.file_read(self.file_id, size)
         return base64.urlsafe_b64decode(data)
 
     def write(self, data):
         data = base64.urlsafe_b64encode(data)
-        self.rpc.write_file(self.file_id, data)
+        self.rpc.file_write(self.file_id, data)
 
 
 class SessionRPCProxy(rpc.RPCProxy):
 
     @contextmanager
-    def open_file(self, path, mode='r'):
-        file_id = self.__getattr__('open_file')(path, mode)
+    def file_open(self, path, mode='r'):
+        file_id = self.__getattr__('file_open')(path, mode)
         rfile = RemoteFile(file_id, self)
         try:
             yield rfile
         finally:
-            self.close_file(file_id)
+            self.file_close(file_id)
 
 
 class Session:
     
     def __init__(self, socket):
         self.sock = socket
-        self.connection = connection.Connection(socket)
+        self.connection = sock.TCPConnection(socket)
         self.rpc = SessionRPCProxy(self.connection)
         self.last_response = time.time()
         self._username = None

