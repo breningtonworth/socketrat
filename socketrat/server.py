@@ -198,7 +198,7 @@ class RATServerCmd(cmd.Cmd):
         self.info('Interacting with session {} ...'.format(sessid))
         sh.cmdqueue.append('info')
         sh.cmdloop()
-        self.info('Detached from session {}.\n'.format(sessid))
+        self.info('Detached from session {}\n'.format(sessid))
 
 
 if __name__ == '__main__':
