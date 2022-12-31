@@ -12,8 +12,8 @@ import time
 from tabulate import tabulate
 from tqdm import tqdm
 
-from . import sock
-from . import rpc
+from .. import sock
+from .. import rpc
 
 
 class SessionCmd(cmd.Cmd):

@@ -12,7 +12,7 @@ import traceback
 import tabulate
 
 from . import sock
-from . import session
+from .payload import session
 
 
 class SimpleRATRequestHandler(socketserver.BaseRequestHandler):
@@ -194,10 +194,6 @@ class RATServerCmd(cmd.Cmd):
             return
         session = self.sessions[sessid]
         sh = self.SessionCmd(session)
-
-        #intro = 'Interacting with session {} ...'.format(sessid)
-        #intro += ' Type help or ? to list commands.\n'
-        intro = ''
 
         self.info('Interacting with session {} ...'.format(sessid))
         sh.cmdqueue.append('info')
